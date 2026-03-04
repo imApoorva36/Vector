@@ -1,0 +1,70 @@
+# Vector Subgraph — Uniswap v4 Hook Risk Event Indexing
+
+type Pool @entity {
+  id: ID!                          # PoolId (bytes32 hex)
+  token0: Bytes!
+  token1: Bytes!
+  fee: Int!
+  protectionMode: String!          # "Unprotected" | "Protected"
+  blockThreshold: Int!
+  warnThreshold: Int!
+  totalSwaps: BigInt!
+  blockedSwaps: BigInt!
+  warnedSwaps: BigInt!
+  allowedSwaps: BigInt!
+  lastUpdated: BigInt!
+}
+
+type SwapEvaluation @entity {
+  id: ID!                          # txHash-logIndex
+  pool: Pool!
+  sender: Bytes!
+  decision: String!                # "ALLOW" | "WARN" | "BLOCK"
+  riskScore: Int!
+  reason: String
+  blockNumber: BigInt!
+  timestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type SwapExecution @entity {
+  id: ID!
+  pool: Pool!
+  sender: Bytes!
+  amount0Delta: BigInt!
+  amount1Delta: BigInt!
+  blockNumber: BigInt!
+  timestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type CrossChainAlert @entity {
+  id: ID!
+  sourceChainId: BigInt!
+  pool: Pool!
+  actor: Bytes!
+  riskScore: Int!
+  reason: String!
+  timestamp: BigInt!
+  blockNumber: BigInt!
+}
+
+type ProtocolStats @entity {
+  id: ID!                          # "global"
+  totalPools: Int!
+  totalSwapEvaluations: BigInt!
+  totalBlockedSwaps: BigInt!
+  totalWarnedSwaps: BigInt!
+  totalCrossChainAlerts: BigInt!
+}
+
+type PolicyChange @entity {
+  id: ID!
+  pool: Pool!
+  oldMode: String
+  newMode: String!
+  blockThreshold: Int!
+  warnThreshold: Int!
+  timestamp: BigInt!
+  blockNumber: BigInt!
+}
