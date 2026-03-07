@@ -53,6 +53,16 @@ if (RPC_URL) {
   defaultProvider = new ethers.JsonRpcProvider(RPC_URL);
 }
 
+// Optional request nonce for replay protection (if client sends nonce, duplicates rejected within window)
+const NONCE_WINDOW_MS = parseInt(process.env.NONCE_WINDOW_MS || "300000"); // 5 min
+const seenNonces = new Map(); // nonce -> expiry timestamp
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, exp] of seenNonces.entries()) {
+    if (exp < now) seenNonces.delete(key);
+  }
+}, 60000);
+
 // ─── POST /api/risk-score ────────────────────────────────────────────
 
 app.post("/api/risk-score", async (req, res) => {
@@ -68,9 +78,19 @@ app.post("/api/risk-score", async (req, res) => {
       sender,
       chainId = 1,
       rpcUrl,
+      nonce,
     } = req.body;
     const token0 = t0 || tokenIn;
     const token1 = t1 || tokenOut;
+
+    if (nonce != null && nonce !== "") {
+      const key = String(nonce);
+      const now = Date.now();
+      if (seenNonces.has(key) && seenNonces.get(key) > now) {
+        return res.status(409).json({ error: "Nonce already used", code: "REPLAY" });
+      }
+      seenNonces.set(key, now + NONCE_WINDOW_MS);
+    }
 
     if (!poolId || !token0 || !token1) {
       return res.status(400).json({ error: "Missing required fields: poolId, token0/tokenIn, token1/tokenOut" });
