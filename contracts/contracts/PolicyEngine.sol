@@ -8,6 +8,9 @@ import {IPolicyEngine} from "./interfaces/IPolicyEngine.sol";
 /// @title PolicyEngine
 /// @notice Deterministic policy evaluation: ALLOW, WARN, BLOCK. Hybrid: protected pools fail-closed, unprotected fail-open.
 contract PolicyEngine is IPolicyEngine, Ownable, Pausable {
+    function paused() public view override(IPolicyEngine, Pausable) returns (bool) {
+        return Pausable.paused();
+    }
     uint256 public constant DEFAULT_BLOCK_THRESHOLD = 70;
     uint256 public constant DEFAULT_WARN_THRESHOLD = 31;
 

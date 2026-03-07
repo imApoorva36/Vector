@@ -6,6 +6,7 @@
     "compile": "npx hardhat compile",
     "test": "npx hardhat test",
     "copy-abis": "node scripts/copy-abis.js",
+    "integration-test": "node scripts/integration-test.js",
     "deploy:baseSepolia": "npx hardhat run scripts/deploy.js --network baseSepolia",
     "deploy:unichainSepolia": "npx hardhat run scripts/deploy.js --network unichainSepolia",
     "node": "npx hardhat node",
