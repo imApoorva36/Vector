@@ -1,7 +1,5 @@
 /**
- * Layer 5 — Token Bytecode Analysis
- * Scans token contract bytecode for dangerous opcodes and patterns.
- * Same pattern as Axiom's bytecodeAnalysis but focused on ERC-20 token context.
+ * Layer 5: Token bytecode analysis. Scans token contract bytecode for dangerous opcodes and patterns (ERC-20 context).
  */
 
 /**
@@ -16,8 +14,7 @@ function analyzeTokenBytecode(bytecode) {
   const raw = (bytecode.startsWith("0x") ? bytecode.slice(2) : bytecode).toLowerCase();
   const len = raw.length / 2;
 
-  // SELFDESTRUCT (0xff) — escape hatch for rug pulls
-  // Count occurrences (approximate — may count false positives in data sections)
+  // SELFDESTRUCT (0xff): escape hatch for rug pulls. Count occurrences (approximate; may count false positives in data sections)
   let selfDestructCount = 0;
   for (let i = 0; i < raw.length - 1; i += 2) {
     if (raw[i] === "f" && raw[i + 1] === "f") selfDestructCount++;
@@ -30,7 +27,7 @@ function analyzeTokenBytecode(bytecode) {
     });
   }
 
-  // DELEGATECALL density — proxy/upgrade pattern (might allow arbitrary logic)
+  // DELEGATECALL density: proxy/upgrade pattern (might allow arbitrary logic)
   let delegateCallCount = 0;
   for (let i = 0; i < raw.length - 1; i += 2) {
     if (raw[i] === "f" && raw[i + 1] === "4") delegateCallCount++;
@@ -38,12 +35,12 @@ function analyzeTokenBytecode(bytecode) {
   if (len > 0 && delegateCallCount >= 3 && delegateCallCount / len > 0.01) {
     signals.push({
       type: "BYTECODE",
-      reason: "High DELEGATECALL density — potential proxy/hijack",
+      reason: "High DELEGATECALL density; potential proxy/hijack",
       score: 15,
     });
   }
 
-  // Very small contract — minimal proxy pattern
+  // Very small contract: minimal proxy pattern
   if (len > 0 && len < 100) {
     signals.push({
       type: "BYTECODE",
@@ -52,11 +49,11 @@ function analyzeTokenBytecode(bytecode) {
     });
   }
 
-  // Very large contract — could hide complexity
+  // Very large contract: could hide complexity
   if (len > 25000) {
     signals.push({
       type: "BYTECODE",
-      reason: "Very large bytecode (>25KB) — complex contract",
+      reason: "Very large bytecode (>25KB); complex contract",
       score: 5,
     });
   }

@@ -1,5 +1,5 @@
 /**
- * Layer 2 — Swap Intent Analysis
+ * Layer 2: Swap intent analysis
  * Analyzes swap parameters for patterns associated with MEV, sandwich attacks,
  * or abnormal swap behavior that may harm liquidity providers.
  */
@@ -46,7 +46,7 @@ function analyzeSwapIntent({ amountSpecified, zeroForOne, sender }) {
       signals.push({
         type: "SWAP_INTENT",
         reasonCode: ReasonCodes.SWAP_MICRO,
-        reason: "Micro swap — potential probing or dust attack",
+        reason: "Micro swap; potential probing or dust attack",
         score: 10,
       });
     }
@@ -56,7 +56,7 @@ function analyzeSwapIntent({ amountSpecified, zeroForOne, sender }) {
 
   // Check if sender is a contract (heuristic: zero-prefix or known patterns)
   if (sender && sender.toLowerCase() !== sender) {
-    // Noop — just normalize
+    // Noop: just normalize
   }
 
   return { signals };

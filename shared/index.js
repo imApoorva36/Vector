@@ -1,5 +1,5 @@
 /**
- * @vector/shared — risk payloads, attestation structs, policy enums, chain/pool IDs
+ * @vector/shared: risk payloads, attestation structs, policy enums, chain/pool IDs
  */
 
 export { CHAIN_IDS, CHAIN_PROFILES, getChainProfile } from "./src/chains.js";

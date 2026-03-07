@@ -3,7 +3,7 @@ import "./globals.css";
 import { Providers } from "./providers";
 
 export const metadata: Metadata = {
-  title: "Vector — Hook-Based Liquidity Protection",
+  title: "Vector - Hook-Based Liquidity Protection",
   description:
     "Real-time risk assessment and protection for Uniswap v4 liquidity pools via attested hook enforcement.",
 };

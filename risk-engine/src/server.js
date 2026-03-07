@@ -1,16 +1,16 @@
 /**
- * Vector Risk Engine — Express API Server
+ * Vector Risk Engine - Express API Server
  *
  * Endpoints:
- *   POST /api/risk-score     — Assess swap risk and return attested score
- *   GET  /api/health         — Health check with signer address and cache stats
+ *   POST /api/risk-score     - Assess swap risk and return attested score
+ *   GET  /api/health         - Health check with signer address and cache stats
  *
  * Environment:
- *   TEE_SIGNER_KEY           — Private key for attestation signing (required)
- *   RPC_URL                  — Default RPC URL for on-chain lookups (optional)
- *   PORT                     — Server port (default: 3001)
- *   RATE_LIMIT_WINDOW_MS     — Rate limit window (default: 60000)
- *   RATE_LIMIT_MAX           — Max requests per window (default: 100)
+ *   TEE_SIGNER_KEY           - Private key for attestation signing (required)
+ *   RPC_URL                  - Default RPC URL for on-chain lookups (optional)
+ *   PORT                     - Server port (default: 3001)
+ *   RATE_LIMIT_WINDOW_MS     - Rate limit window (default: 60000)
+ *   RATE_LIMIT_MAX           - Max requests per window (default: 100)
  */
 
 const express = require("express");
@@ -43,7 +43,7 @@ if (TEE_SIGNER_KEY) {
   signer = new AttestationSigner(TEE_SIGNER_KEY);
   logger.info("TEE signer initialized", { signerAddress: signer.address });
 } else {
-  logger.warn("TEE_SIGNER_KEY not set — attestations will be unavailable");
+  logger.warn("TEE_SIGNER_KEY not set; attestations will be unavailable");
 }
 
 // Default provider

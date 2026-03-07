@@ -1,8 +1,8 @@
 /**
- * Layer 4 — On-Chain Pool & Token Signals
+ * Layer 4: On-chain pool and token signals
  * Fetches on-chain data about target tokens: contract vs EOA, tx count, code size,
  * balance, and token age indicators.
- * Adapted from Axiom's onchainSignals but targeted at token/pool context.
+ * Targeted at token/pool context.
  */
 
 /**
@@ -32,18 +32,18 @@ async function getPoolOnChainSignals({ token0, token1, targetToken, provider, ch
     if (!isContract) {
       signals.push({
         type: "ONCHAIN",
-        reason: "Target token is not a contract (EOA) — invalid token",
+        reason: "Target token is not a contract (EOA); invalid token",
         score: 50,
       });
       return { signals };
     }
 
-    // Very small bytecode — possible minimal proxy or stub
+    // Very small bytecode: possible minimal proxy or stub
     const bytecodeLen = (code.length - 2) / 2;
     if (bytecodeLen < 100) {
       signals.push({
         type: "ONCHAIN",
-        reason: "Token contract has very small bytecode — possible proxy/stub",
+        reason: "Token contract has very small bytecode; possible proxy/stub",
         score: 15,
       });
     }
@@ -52,7 +52,7 @@ async function getPoolOnChainSignals({ token0, token1, targetToken, provider, ch
     if (txCount === 0) {
       signals.push({
         type: "ONCHAIN",
-        reason: "Token contract has zero transactions — freshly deployed",
+        reason: "Token contract has zero transactions; freshly deployed",
         score: 25,
       });
     } else if (txCount <= 5) {
@@ -65,7 +65,7 @@ async function getPoolOnChainSignals({ token0, token1, targetToken, provider, ch
       // Well-established token: trust signal
       signals.push({
         type: "ONCHAIN",
-        reason: "Token has >10k transactions — established",
+        reason: "Token has >10k transactions; established",
         score: -10,
       });
     }
@@ -76,12 +76,12 @@ async function getPoolOnChainSignals({ token0, token1, targetToken, provider, ch
     if (balanceEth > 100) {
       signals.push({
         type: "ONCHAIN",
-        reason: `Token contract holds ${balanceEth.toFixed(2)} ETH — unusual for token contracts`,
+        reason: `Token contract holds ${balanceEth.toFixed(2)} ETH; unusual for token contracts`,
         score: 10,
       });
     }
   } catch (_) {
-    // RPC failure — don't penalize
+    // RPC failure: do not penalize
   }
 
   return { signals };

@@ -122,7 +122,7 @@ export function DashboardView() {
                   {health.signerAddress}
                 </p>
               )}
-              <p className="text-xs text-slate-500">Cache size: {health.cacheSize ?? "—"}</p>
+              <p className="text-xs text-slate-500">Cache size: {health.cacheSize ?? "-"}</p>
             </div>
           ) : (
             <p className="text-sm text-slate-500">Risk engine unreachable</p>
@@ -138,7 +138,7 @@ export function DashboardView() {
               {SUBGRAPH_URL ? "Subgraph connected" : "Subgraph not configured"}
             </p>
             <p className="text-xs text-slate-500">
-              Cross-chain alerts: {stats?.totalCrossChainAlerts ?? "—"}
+              Cross-chain alerts: {stats?.totalCrossChainAlerts ?? "-"}
             </p>
           </div>
         </div>
@@ -147,11 +147,11 @@ export function DashboardView() {
       {/* Stats cards */}
       <div className="mb-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         {[
-          { icon: <Activity className="h-5 w-5 text-vector-accent" />, label: "Evaluations", value: stats?.totalSwapEvaluations || "—" },
-          { icon: <ShieldCheck className="h-5 w-5 text-emerald-400" />, label: "Protected Pools", value: stats?.totalPools || "—" },
-          { icon: <ShieldX className="h-5 w-5 text-red-400" />, label: "Blocked", value: stats?.totalBlockedSwaps || "—" },
-          { icon: <ShieldAlert className="h-5 w-5 text-amber-400" />, label: "Warned", value: stats?.totalWarnedSwaps || "—" },
-          { icon: <TrendingUp className="h-5 w-5 text-violet-400" />, label: "X-Chain Alerts", value: stats?.totalCrossChainAlerts || "—" },
+          { icon: <Activity className="h-5 w-5 text-vector-accent" />, label: "Evaluations", value: stats?.totalSwapEvaluations || "-" },
+          { icon: <ShieldCheck className="h-5 w-5 text-emerald-400" />, label: "Protected Pools", value: stats?.totalPools || "-" },
+          { icon: <ShieldX className="h-5 w-5 text-red-400" />, label: "Blocked", value: stats?.totalBlockedSwaps || "-" },
+          { icon: <ShieldAlert className="h-5 w-5 text-amber-400" />, label: "Warned", value: stats?.totalWarnedSwaps || "-" },
+          { icon: <TrendingUp className="h-5 w-5 text-violet-400" />, label: "X-Chain Alerts", value: stats?.totalCrossChainAlerts || "-" },
         ].map((s) => (
           <div key={s.label} className="rounded-xl border border-vector-border bg-vector-card p-4">
             <div className="flex items-center gap-3">
@@ -240,7 +240,7 @@ export function DashboardView() {
                     </span>
                   </div>
                   <p className="mt-1 text-xs text-slate-400">
-                    Risk: {a.riskScore} — {a.reason}
+                    Risk: {a.riskScore} - {a.reason}
                   </p>
                 </div>
               ))}

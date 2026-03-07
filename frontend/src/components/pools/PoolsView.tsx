@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { Shield, Plus, Trash2 } from "lucide-react";
+import { getContracts } from "@/lib/constants";
 
 // ABI fragments for VectorRiskRegistry
 const REGISTRY_ABI = [
@@ -27,10 +28,9 @@ const REGISTRY_ABI = [
   },
 ] as const;
 
-const REGISTRY_ADDRESS = process.env.NEXT_PUBLIC_REGISTRY_ADDRESS as `0x${string}` | undefined;
-
 export function PoolsView() {
-  const { isConnected } = useAccount();
+  const { isConnected, chainId } = useAccount();
+  const REGISTRY_ADDRESS = (chainId != null ? getContracts(chainId) : getContracts(84532)).RISK_REGISTRY;
   const [poolId, setPoolId] = useState("");
   const [blockThreshold, setBlockThreshold] = useState("70");
   const [warnThreshold, setWarnThreshold] = useState("31");

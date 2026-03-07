@@ -1,7 +1,5 @@
 /**
- * Layer 3 — Token Threat Intelligence
- * Checks tokens against known malicious lists and GoPlus token security API.
- * Adapted from Axiom's threatIntel but focused on token-level risk (not address-level).
+ * Layer 3: Token threat intelligence. Checks tokens against known malicious lists and GoPlus token security API.
  */
 
 // Known malicious/risky token patterns
@@ -13,7 +11,7 @@ const KNOWN_MALICIOUS_TOKENS = new Set([
 
 // Known rug-pull token deployer addresses
 const KNOWN_RUG_DEPLOYERS = new Set([
-  // Placeholder — populated from threat intel feeds
+  // Placeholder: populated from threat intel feeds
 ]);
 
 /**
@@ -96,7 +94,7 @@ async function fetchGoPlusTokenSecurity(tokenAddress, chainId) {
       signals.push({ type: "THREAT_INTEL", reason: "Token uses proxy pattern", score: 10 });
     }
   } catch (_) {
-    // API failure — rely on other layers
+    // API failure: rely on other layers
   }
 
   return { signals };

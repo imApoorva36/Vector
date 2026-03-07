@@ -8,10 +8,10 @@ const SUBGRAPH_URL = process.env.NEXT_PUBLIC_SUBGRAPH_URL || "";
 async function fetchStats() {
   if (!SUBGRAPH_URL) {
     return {
-      totalSwapEvaluations: "—",
-      totalBlockedSwaps: "—",
-      totalWarnedSwaps: "—",
-      totalPools: "—",
+      totalSwapEvaluations: "-",
+      totalBlockedSwaps: "-",
+      totalWarnedSwaps: "-",
+      totalPools: "-",
     };
   }
 
@@ -59,25 +59,25 @@ export function StatsBar() {
     {
       icon: <Activity className="h-5 w-5 text-vector-accent" />,
       label: "Total Evaluations",
-      value: data?.totalSwapEvaluations?.toString() || "—",
+      value: data?.totalSwapEvaluations?.toString() || "-",
       color: "bg-vector-accent/10",
     },
     {
       icon: <ShieldCheck className="h-5 w-5 text-vector-success" />,
       label: "Protected Pools",
-      value: data?.totalPools?.toString() || "—",
+      value: data?.totalPools?.toString() || "-",
       color: "bg-vector-success/10",
     },
     {
       icon: <ShieldX className="h-5 w-5 text-vector-danger" />,
       label: "Blocked Swaps",
-      value: data?.totalBlockedSwaps?.toString() || "—",
+      value: data?.totalBlockedSwaps?.toString() || "-",
       color: "bg-vector-danger/10",
     },
     {
       icon: <ShieldAlert className="h-5 w-5 text-vector-warning" />,
       label: "Warned Swaps",
-      value: data?.totalWarnedSwaps?.toString() || "—",
+      value: data?.totalWarnedSwaps?.toString() || "-",
       color: "bg-vector-warning/10",
     },
   ];

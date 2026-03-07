@@ -1,5 +1,5 @@
 /**
- * Vector Risk Engine — Test Suite
+ * Vector Risk Engine - Test Suite
  *
  * Run: node src/test.js
  * Tests the layered scoring pipeline and attestation signing.

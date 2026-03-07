@@ -1,8 +1,6 @@
 /**
  * In-memory TTL cache for risk assessment results.
- * Keyed on poolId:token + chainId — avoids hammering GoPlus/RPC.
- * TTL: 5 minutes (matches attestation expiry window).
- * Reused from Axiom's cache pattern.
+ * Keyed on poolId:token + chainId. TTL: 5 minutes (matches attestation expiry window).
  */
 
 const DEFAULT_TTL_MS = 5 * 60 * 1000;

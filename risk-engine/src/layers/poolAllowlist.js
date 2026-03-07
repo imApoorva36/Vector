@@ -1,7 +1,5 @@
 /**
- * Layer 1 — Pool & Token Allowlist
- * Trusted pools/tokens get risk score 0 and skip all further analysis.
- * Adapted from Axiom's protocol allowlist but focused on Uniswap v4 pool context.
+ * Layer 1: Pool and token allowlist. Trusted pools/tokens get risk score 0 and skip further analysis.
  */
 
 // Well-known trusted token addresses (lowercase)

@@ -1,13 +1,12 @@
 /**
- * Vector Risk Engine — Main orchestrator
- * Adapted from Axiom's TEE risk pipeline but re-targeted at Uniswap v4 pool/swap risk.
+ * Vector Risk Engine - Main orchestrator
  *
  * Layers:
- *   1. Pool Allowlist   — trusted pools/tokens get score 0 (fast exit)
- *   2. Swap Intent      — analyze swap parameters for suspicious patterns
- *   3. Token Threat Intel — GoPlus + hardcoded malicious token lists
- *   4. On-Chain Pool Signals — liquidity depth, concentration, freshness
- *   5. Bytecode Analysis — token contract bytecode for dangerous opcodes
+ *   1. Pool Allowlist: trusted pools/tokens get score 0 (fast exit)
+ *   2. Swap Intent: analyze swap parameters for suspicious patterns
+ *   3. Token Threat Intel: GoPlus + hardcoded malicious token lists
+ *   4. On-Chain Pool Signals: liquidity depth, concentration, freshness
+ *   5. Bytecode Analysis: token contract bytecode for dangerous opcodes
  *
  * Returns: { riskScore, decision, signals[], timestamp }
  */

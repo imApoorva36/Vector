@@ -1,5 +1,5 @@
 /**
- * Policy decision constants — must match IPolicyEngine.Decision enum (0=ALLOW, 1=WARN, 2=BLOCK).
+ * Policy decision constants; must match IPolicyEngine.Decision enum (0=ALLOW, 1=WARN, 2=BLOCK).
  */
 
 export const POLICY_DECISION = {

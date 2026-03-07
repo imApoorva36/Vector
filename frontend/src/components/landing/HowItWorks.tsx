@@ -5,7 +5,7 @@ const steps = [
     icon: <Scan className="h-6 w-6" />,
     title: "1. Risk Assessment",
     description:
-      "Off-chain TEE-grade risk engine runs 5 analysis layers — allowlist, swap intent, threat intel, on-chain signals, and bytecode analysis — to produce a 0–100 risk score.",
+      "Off-chain TEE-grade risk engine runs 5 analysis layers: allowlist, swap intent, threat intel, on-chain signals, and bytecode analysis, producing a 0-100 risk score.",
   },
   {
     icon: <ShieldCheck className="h-6 w-6" />,

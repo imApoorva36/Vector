@@ -7,7 +7,7 @@ export function Footer() {
         <div className="flex items-center justify-center gap-2 text-slate-400">
           <Shield className="h-4 w-4" />
           <span className="text-sm">
-            Vector — Hook-Based Liquidity Protection for Uniswap v4
+            Vector - Hook-Based Liquidity Protection for Uniswap v4
           </span>
         </div>
         <p className="mt-2 text-xs text-slate-500">

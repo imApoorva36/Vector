@@ -87,5 +87,5 @@ export function handlePoolProtectionRemoved(event: PoolProtectionRemoved): void 
 }
 
 export function handleSignerUpdated(event: SignerUpdated): void {
-  // Log for observability — no entity needed
+  // Log for observability; no entity needed
 }
