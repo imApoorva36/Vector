@@ -12,6 +12,7 @@
  * Returns: { riskScore, decision, signals[], timestamp }
  */
 
+const { ReasonCodes } = require("./reasonCodes");
 const { checkPoolAllowlist } = require("./layers/poolAllowlist");
 const { analyzeSwapIntent } = require("./layers/swapIntent");
 const { runTokenThreatIntel } = require("./layers/tokenThreatIntel");
@@ -53,7 +54,12 @@ async function assessSwapRisk(params) {
       poolId,
       riskScore: 0,
       decision: "ALLOW",
-      signals: [{ type: "ALLOWLIST", reason: allow.reason, score: 0 }],
+      signals: [{
+        type: "ALLOWLIST",
+        reasonCode: allow.reasonCode || ReasonCodes.ALLOWLIST_TOKENS,
+        reason: allow.reason,
+        score: 0,
+      }],
       timestamp: Math.floor(Date.now() / 1000),
     };
   }

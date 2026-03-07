@@ -41,12 +41,12 @@ function checkPoolAllowlist(poolId, token0, token1, chainId) {
   const pid = (poolId || "").toLowerCase();
 
   if (TRUSTED_POOLS.has(pid)) {
-    return { allowed: true, reason: "Trusted pool (allowlist)" };
+    return { allowed: true, reason: "Trusted pool (allowlist)", reasonCode: "ALLOWLIST_POOL" };
   }
 
   // Both tokens must be trusted for auto-allow
   if (TRUSTED_TOKENS.has(t0) && TRUSTED_TOKENS.has(t1)) {
-    return { allowed: true, reason: "Both tokens on trusted allowlist" };
+    return { allowed: true, reason: "Both tokens on trusted allowlist", reasonCode: "ALLOWLIST_TOKENS" };
   }
 
   return { allowed: false };

@@ -20,6 +20,7 @@ const { ethers } = require("ethers");
 const { assessSwapRisk } = require("./index");
 const { AttestationSigner } = require("./attestation/signer");
 const { size: cacheSize } = require("./cache");
+const logger = require("./logger");
 
 const app = express();
 app.use(cors());
@@ -40,9 +41,9 @@ const TEE_SIGNER_KEY = process.env.TEE_SIGNER_KEY;
 let signer = null;
 if (TEE_SIGNER_KEY) {
   signer = new AttestationSigner(TEE_SIGNER_KEY);
-  console.log(`[Vector] TEE signer initialized: ${signer.address}`);
+  logger.info("TEE signer initialized", { signerAddress: signer.address });
 } else {
-  console.warn("[Vector] WARNING: TEE_SIGNER_KEY not set — attestations will be unavailable");
+  logger.warn("TEE_SIGNER_KEY not set — attestations will be unavailable");
 }
 
 // Default provider
@@ -58,17 +59,21 @@ app.post("/api/risk-score", async (req, res) => {
   try {
     const {
       poolId,
-      token0,
-      token1,
+      token0: t0,
+      token1: t1,
+      tokenIn,
+      tokenOut,
       zeroForOne,
       amountSpecified,
       sender,
       chainId = 1,
       rpcUrl,
     } = req.body;
+    const token0 = t0 || tokenIn;
+    const token1 = t1 || tokenOut;
 
     if (!poolId || !token0 || !token1) {
-      return res.status(400).json({ error: "Missing required fields: poolId, token0, token1" });
+      return res.status(400).json({ error: "Missing required fields: poolId, token0/tokenIn, token1/tokenOut" });
     }
 
     // Use request-provided RPC or default
@@ -83,7 +88,7 @@ app.post("/api/risk-score", async (req, res) => {
       token0,
       token1,
       zeroForOne: zeroForOne ?? true,
-      amountSpecified: amountSpecified || "0",
+      amountSpecified: amountSpecified || req.body.amountIn || "0",
       sender: sender || ethers.ZeroAddress,
       chainId,
       provider,
@@ -96,20 +101,36 @@ app.post("/api/risk-score", async (req, res) => {
       attestation = await signer.sign({
         poolId,
         zeroForOne: zeroForOne ?? true,
-        amountSpecified: amountSpecified || "0",
+        amountSpecified: amountSpecified || req.body.amountIn || "0",
         riskScore: assessment.riskScore,
         expiry,
         chainId,
       });
     }
 
+    const breakdown = (assessment.signals || []).map((s) => ({
+      layer: s.type || "SIGNAL",
+      reasonCode: s.reasonCode || null,
+      score: s.score ?? 0,
+      details: s.reason || "",
+    }));
+
     return res.json({
+      riskScore: assessment.riskScore,
+      decision: assessment.decision,
+      breakdown,
+      attestation: attestation
+        ? {
+            signature: attestation.signature,
+            expiry: attestation.expiry,
+            signer: attestation.signerAddress || signer?.address,
+          }
+        : null,
       assessment,
-      attestation,
       signerAddress: signer?.address || null,
     });
   } catch (err) {
-    console.error("[Vector] Risk score error:", err.message);
+    logger.error("Risk score error", { error: err.message, stack: err.stack });
     return res.status(500).json({ error: "Internal risk engine error" });
   }
 });
@@ -132,7 +153,7 @@ app.get("/api/health", (req, res) => {
 const PORT = parseInt(process.env.PORT || "3001");
 if (require.main === module) {
   app.listen(PORT, () => {
-    console.log(`[Vector Risk Engine] Running on port ${PORT}`);
+    logger.info("Risk engine listening", { port: PORT });
   });
 }
 

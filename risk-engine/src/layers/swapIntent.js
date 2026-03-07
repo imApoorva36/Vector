@@ -4,6 +4,8 @@
  * or abnormal swap behavior that may harm liquidity providers.
  */
 
+const { ReasonCodes } = require("../reasonCodes");
+
 // Thresholds for suspicious swap patterns
 const LARGE_SWAP_THRESHOLD_ETH = "50";  // > 50 ETH equivalent triggers scrutiny
 const MICRO_SWAP_THRESHOLD_WEI = "1000"; // Very small swaps may be probing
@@ -34,6 +36,7 @@ function analyzeSwapIntent({ amountSpecified, zeroForOne, sender }) {
     if (amountBigInt > largeThreshold) {
       signals.push({
         type: "SWAP_INTENT",
+        reasonCode: ReasonCodes.SWAP_LARGE,
         reason: "Unusually large swap amount — potential whale manipulation or sandwich bait",
         score: 15,
       });
@@ -42,6 +45,7 @@ function analyzeSwapIntent({ amountSpecified, zeroForOne, sender }) {
     if (amountBigInt > BigInt(0) && amountBigInt < microThreshold) {
       signals.push({
         type: "SWAP_INTENT",
+        reasonCode: ReasonCodes.SWAP_MICRO,
         reason: "Micro swap — potential probing or dust attack",
         score: 10,
       });
