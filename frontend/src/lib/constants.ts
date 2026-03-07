@@ -12,8 +12,10 @@ export const RISK_API_URL =
 export const SUBGRAPH_URL =
   process.env.NEXT_PUBLIC_SUBGRAPH_URL || "";
 
-// Chain config
+// Chain config — from @vector/shared (single source of truth)
+import { CHAIN_IDS, getChainProfile } from "@vector/shared";
 export const SUPPORTED_CHAINS = {
-  BASE_SEPOLIA: 84532,
-  UNICHAIN_SEPOLIA: 1301,
+  BASE_SEPOLIA: CHAIN_IDS.BASE_SEPOLIA,
+  UNICHAIN_SEPOLIA: CHAIN_IDS.UNICHAIN_SEPOLIA,
 } as const;
+export { getChainProfile };

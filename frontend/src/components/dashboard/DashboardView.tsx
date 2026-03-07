@@ -7,9 +7,12 @@ import {
   ShieldX,
   ShieldAlert,
   TrendingUp,
+  Key,
+  Zap,
 } from "lucide-react";
 
 const SUBGRAPH_URL = process.env.NEXT_PUBLIC_SUBGRAPH_URL || "";
+const RISK_API_URL = process.env.NEXT_PUBLIC_RISK_API_URL || "http://localhost:3001";
 
 async function fetchDashboardData() {
   if (!SUBGRAPH_URL) return null;
@@ -44,10 +47,26 @@ async function fetchDashboardData() {
           timestamp
           pool { id }
         }
+        poolsByBlocked: pools(first: 5, orderBy: blockedSwaps, orderDirection: desc) {
+          id
+          blockedSwaps
+          warnedSwaps
+          allowedSwaps
+        }
       }`,
     }),
   });
   return (await res.json()).data;
+}
+
+async function fetchRiskEngineHealth() {
+  try {
+    const res = await fetch(`${RISK_API_URL}/api/health`);
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
 }
 
 function decisionBadge(decision: string) {
@@ -71,14 +90,59 @@ export function DashboardView() {
     queryFn: fetchDashboardData,
     refetchInterval: 10_000,
   });
+  const { data: health } = useQuery({
+    queryKey: ["risk-engine-health"],
+    queryFn: fetchRiskEngineHealth,
+    refetchInterval: 15_000,
+  });
 
   const stats = data?.protocolStats;
   const evals = data?.swapEvaluations || [];
   const alerts = data?.crossChainAlerts || [];
+  const poolsByBlocked = data?.poolsByBlocked || [];
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10">
       <h1 className="mb-8 text-3xl font-bold">Operator Dashboard</h1>
+
+      {/* Signer & sponsor status */}
+      <div className="mb-8 grid gap-4 sm:grid-cols-2">
+        <div className="rounded-xl border border-vector-border bg-vector-card p-4">
+          <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-300">
+            <Key className="h-4 w-4" />
+            TEE Signer Status
+          </h3>
+          {health ? (
+            <div className="space-y-1 text-sm">
+              <p className={health.signerConfigured ? "text-emerald-400" : "text-amber-400"}>
+                {health.signerConfigured ? "Configured" : "Not configured"}
+              </p>
+              {health.signerAddress && (
+                <p className="truncate font-mono text-xs text-slate-500">
+                  {health.signerAddress}
+                </p>
+              )}
+              <p className="text-xs text-slate-500">Cache size: {health.cacheSize ?? "—"}</p>
+            </div>
+          ) : (
+            <p className="text-sm text-slate-500">Risk engine unreachable</p>
+          )}
+        </div>
+        <div className="rounded-xl border border-vector-border bg-vector-card p-4">
+          <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-300">
+            <Zap className="h-4 w-4" />
+            Reactive Network
+          </h3>
+          <div className="space-y-1 text-sm">
+            <p className={SUBGRAPH_URL ? "text-emerald-400" : "text-slate-500"}>
+              {SUBGRAPH_URL ? "Subgraph connected" : "Subgraph not configured"}
+            </p>
+            <p className="text-xs text-slate-500">
+              Cross-chain alerts: {stats?.totalCrossChainAlerts ?? "—"}
+            </p>
+          </div>
+        </div>
+      </div>
 
       {/* Stats cards */}
       <div className="mb-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
@@ -133,6 +197,25 @@ export function DashboardView() {
             </div>
           )}
         </div>
+
+        {/* Trend: pools by blocked count */}
+        {poolsByBlocked.length > 0 && (
+          <div className="rounded-xl border border-vector-border bg-vector-card p-6 lg:col-span-2">
+            <h2 className="mb-4 text-lg font-semibold">Pools by Blocked Swaps (top 5)</h2>
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+              {poolsByBlocked.map((p: any) => (
+                <div
+                  key={p.id}
+                  className="rounded-lg bg-vector-dark/50 px-4 py-3"
+                >
+                  <p className="truncate font-mono text-xs text-slate-500">{p.id?.slice(0, 18)}...</p>
+                  <p className="mt-1 text-sm font-bold text-red-400">{p.blockedSwaps} blocked</p>
+                  <p className="text-xs text-slate-500">{p.warnedSwaps} warned · {p.allowedSwaps} allowed</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Cross-chain alerts */}
         <div className="rounded-xl border border-vector-border bg-vector-card p-6">

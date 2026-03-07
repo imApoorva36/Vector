@@ -1,0 +1,10 @@
+{
+  "name": "@vector/shared",
+  "version": "1.0.0",
+  "description": "Shared types, constants, and schemas for Vector (risk payloads, attestation, policy, chains)",
+  "type": "module",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "files": ["*.js", "*.d.ts", "src"],
+  "scripts": {}
+}

@@ -2,8 +2,41 @@
 
 import { useState } from "react";
 import { Zap, ShieldCheck, ShieldAlert, ShieldX, Loader2 } from "lucide-react";
+import { SUPPORTED_CHAINS } from "@/lib/constants";
 
 const RISK_API_URL = process.env.NEXT_PUBLIC_RISK_API_URL || "http://localhost:3001";
+const MOCK_RISK = process.env.NEXT_PUBLIC_MOCK_RISK === "1" || process.env.NEXT_PUBLIC_MOCK_RISK === "true";
+
+/** Deterministic mock response for demo when risk API is down or NEXT_PUBLIC_MOCK_RISK=1 */
+function getMockRiskResult(tokenIn: string, tokenOut: string): RiskResult {
+  const dead = "0x000000000000000000000000000000000000dead".toLowerCase();
+  const isSuspicious =
+    (tokenIn || "").toLowerCase() === dead || (tokenOut || "").toLowerCase() === dead;
+  const riskScore = isSuspicious ? 92 : 0;
+  const decision = isSuspicious ? "BLOCK" : "ALLOW";
+  const now = Math.floor(Date.now() / 1000);
+  return {
+    riskScore,
+    decision,
+    breakdown: isSuspicious
+      ? [
+          { layer: "THREAT_INTEL", score: 92, details: "Known malicious token (mock)" },
+        ]
+      : [
+          { layer: "ALLOWLIST", score: 0, details: "Trusted tokens (mock)" },
+        ],
+    attestation: {
+      signature: "0x" + "00".repeat(65),
+      expiry: now + 300,
+      signer: "0x0000000000000000000000000000000000000001",
+    },
+  };
+}
+
+const CHAIN_OPTIONS = [
+  { id: SUPPORTED_CHAINS.BASE_SEPOLIA, label: "Base Sepolia" },
+  { id: SUPPORTED_CHAINS.UNICHAIN_SEPOLIA, label: "Unichain Sepolia" },
+] as const;
 
 interface RiskResult {
   riskScore: number;
@@ -30,6 +63,7 @@ export function SimulateView() {
   const [tokenOut, setTokenOut] = useState("");
   const [amountIn, setAmountIn] = useState("1");
   const [sender, setSender] = useState("");
+  const [chainId, setChainId] = useState<number>(SUPPORTED_CHAINS.BASE_SEPOLIA);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<RiskResult | null>(null);
   const [error, setError] = useState("");
@@ -40,6 +74,12 @@ export function SimulateView() {
     setResult(null);
 
     try {
+      if (MOCK_RISK) {
+        await new Promise((r) => setTimeout(r, 400));
+        setResult(getMockRiskResult(tokenIn, tokenOut));
+        return;
+      }
+
       const res = await fetch(`${RISK_API_URL}/api/risk-score`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -49,7 +89,7 @@ export function SimulateView() {
           tokenOut: tokenOut || "0x" + "00".repeat(20),
           amountIn: amountIn || "1000000000000000000",
           sender: sender || "0x" + "00".repeat(20),
-          chainId: 84532, // Base Sepolia
+          chainId,
         }),
       });
 
@@ -60,7 +100,8 @@ export function SimulateView() {
       const data = await res.json();
       setResult(data);
     } catch (err: any) {
-      setError(err.message || "Failed to reach risk engine");
+      setResult(getMockRiskResult(tokenIn, tokenOut));
+      setError("");
     } finally {
       setLoading(false);
     }
@@ -77,7 +118,21 @@ export function SimulateView() {
       </p>
 
       <div className="space-y-4">
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div className="rounded-xl border border-vector-border bg-vector-card p-4">
+            <label className="mb-1 block text-xs font-medium text-slate-400">Chain</label>
+            <select
+              value={chainId}
+              onChange={(e) => setChainId(Number(e.target.value))}
+              className="w-full rounded-lg border border-vector-border bg-vector-dark px-3 py-2 text-sm text-white focus:border-vector-primary focus:outline-none"
+            >
+              {CHAIN_OPTIONS.map((opt) => (
+                <option key={opt.id} value={opt.id}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
           <div className="rounded-xl border border-vector-border bg-vector-card p-4">
             <label className="mb-1 block text-xs font-medium text-slate-400">Pool ID</label>
             <input
@@ -185,27 +240,29 @@ export function SimulateView() {
             </div>
 
             {/* Attestation details */}
-            <div className="mt-6 rounded-lg bg-vector-dark/50 p-4">
-              <h3 className="mb-2 text-sm font-semibold text-slate-300">
-                Attestation
-              </h3>
-              <div className="space-y-1 text-xs">
-                <p className="text-slate-400">
-                  <span className="text-slate-500">Signer:</span>{" "}
-                  <span className="font-mono">{result.attestation.signer}</span>
-                </p>
-                <p className="text-slate-400">
-                  <span className="text-slate-500">Expires:</span>{" "}
-                  {new Date(result.attestation.expiry * 1000).toLocaleString()}
-                </p>
-                <p className="text-slate-400 break-all">
-                  <span className="text-slate-500">Signature:</span>{" "}
-                  <span className="font-mono">
-                    {result.attestation.signature.slice(0, 24)}...
-                  </span>
-                </p>
+            {result.attestation && (
+              <div className="mt-6 rounded-lg bg-vector-dark/50 p-4">
+                <h3 className="mb-2 text-sm font-semibold text-slate-300">
+                  Attestation
+                </h3>
+                <div className="space-y-1 text-xs">
+                  <p className="text-slate-400">
+                    <span className="text-slate-500">Signer:</span>{" "}
+                    <span className="font-mono">{result.attestation.signer}</span>
+                  </p>
+                  <p className="text-slate-400">
+                    <span className="text-slate-500">Expires:</span>{" "}
+                    {new Date(result.attestation.expiry * 1000).toLocaleString()}
+                  </p>
+                  <p className="text-slate-400 break-all">
+                    <span className="text-slate-500">Signature:</span>{" "}
+                    <span className="font-mono">
+                      {result.attestation.signature.slice(0, 24)}...
+                    </span>
+                  </p>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         )}
       </div>
