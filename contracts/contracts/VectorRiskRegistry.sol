@@ -36,7 +36,7 @@ contract VectorRiskRegistry is IVectorRiskRegistry, Ownable {
         riskThreshold = 70;
     }
 
-    // ─── Attestation verification (ported from Axiom TEE pattern) ───────────
+    // Attestation verification (TEE signer, swap-bound message)
     /// @inheritdoc IVectorRiskRegistry
     function verifyAttestation(
         bytes32 poolId,

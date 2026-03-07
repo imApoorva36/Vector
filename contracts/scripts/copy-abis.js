@@ -32,7 +32,7 @@ function main() {
     fs.writeFileSync(path.join(OUT, `${name}.json`), abiOnly);
     console.log(`Written subgraph/abis/${name}.json`);
   }
-  console.log("VectorReactiveCallback is in reactive/ — copy manually if needed.");
+  console.log("VectorReactiveCallback is in reactive/; copy manually if needed.");
 }
 
 main();

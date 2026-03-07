@@ -123,7 +123,7 @@ describe("Vector", function () {
         expiry,
         chainId
       );
-      // Replay same attestation for a different pool — registry reverts (invalid signer for this pool)
+      // Replay same attestation for a different pool: registry reverts (invalid signer for this pool)
       await expect(
         hook.evaluateSwap(POOL_ID_OTHER, user.address, true, amountSpecified, hookData)
       ).to.be.revertedWithCustomError(registry, "InvalidTEEAttestation");

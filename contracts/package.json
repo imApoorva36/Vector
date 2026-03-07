@@ -1,7 +1,7 @@
 {
   "name": "contracts",
   "version": "1.0.0",
-  "description": "Vector Hook, Risk Registry, Policy Engine — Uniswap v4 liquidity protection",
+  "description": "Vector Hook, Risk Registry, Policy Engine - Uniswap v4 liquidity protection",
   "scripts": {
     "compile": "npx hardhat compile",
     "test": "npx hardhat test",
@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "^5.0.2",
+    "@uniswap/v4-periphery": "^1.0.3",
     "dotenv": "^16.4.5"
   }
 }

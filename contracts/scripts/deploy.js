@@ -43,6 +43,18 @@ async function main() {
   const hookAddress = await hook.getAddress();
   console.log("VectorHook:", hookAddress);
 
+  let hookV4Address = null;
+  const poolManagerAddress = process.env.POOL_MANAGER_ADDRESS;
+  if (poolManagerAddress) {
+    const VectorHookV4 = await hre.ethers.getContractFactory("VectorHookV4");
+    const hookV4 = await VectorHookV4.deploy(poolManagerAddress, hookAddress);
+    await hookV4.waitForDeployment();
+    hookV4Address = await hookV4.getAddress();
+    console.log("VectorHookV4:", hookV4Address);
+  } else {
+    console.log("VectorHookV4: skipped (set POOL_MANAGER_ADDRESS to deploy)");
+  }
+
   const callback = await VectorReactiveCallback.deploy();
   await callback.waitForDeployment();
   const callbackAddress = await callback.getAddress();
@@ -55,6 +67,7 @@ async function main() {
     VectorRiskRegistry: registryAddress,
     PolicyEngine: policyAddress,
     VectorHook: hookAddress,
+    VectorHookV4: hookV4Address || undefined,
     VectorReactiveCallback: callbackAddress,
   };
 
