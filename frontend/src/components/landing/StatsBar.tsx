@@ -1,12 +1,12 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useAccount } from "wagmi";
 import { ShieldCheck, ShieldAlert, ShieldX, Activity } from "lucide-react";
+import { getSubgraphUrl } from "@/lib/constants";
 
-const SUBGRAPH_URL = process.env.NEXT_PUBLIC_SUBGRAPH_URL || "";
-
-async function fetchStats() {
-  if (!SUBGRAPH_URL) {
+async function fetchStats(subgraphUrl: string) {
+  if (!subgraphUrl) {
     return {
       totalSwapEvaluations: "-",
       totalBlockedSwaps: "-",
@@ -15,7 +15,7 @@ async function fetchStats() {
     };
   }
 
-  const res = await fetch(SUBGRAPH_URL, {
+  const res = await fetch(subgraphUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -49,9 +49,11 @@ function StatCard({
 }
 
 export function StatsBar() {
+  const { chainId } = useAccount();
+  const subgraphUrl = getSubgraphUrl(chainId ?? 0);
   const { data } = useQuery({
-    queryKey: ["protocolStats"],
-    queryFn: fetchStats,
+    queryKey: ["protocolStats", chainId, subgraphUrl],
+    queryFn: () => fetchStats(subgraphUrl),
     refetchInterval: 10_000,
   });
 

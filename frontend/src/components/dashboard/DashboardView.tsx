@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useAccount } from "wagmi";
 import {
   Activity,
   ShieldCheck,
@@ -10,14 +11,12 @@ import {
   Key,
   Zap,
 } from "lucide-react";
+import { SUBGRAPH_URL, RISK_API_URL } from "@/lib/constants";
 
-const SUBGRAPH_URL = process.env.NEXT_PUBLIC_SUBGRAPH_URL || "";
-const RISK_API_URL = process.env.NEXT_PUBLIC_RISK_API_URL || "http://localhost:3001";
+async function fetchDashboardData(subgraphUrl: string) {
+  if (!subgraphUrl) return null;
 
-async function fetchDashboardData() {
-  if (!SUBGRAPH_URL) return null;
-
-  const res = await fetch(SUBGRAPH_URL, {
+  const res = await fetch(subgraphUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -61,7 +60,8 @@ async function fetchDashboardData() {
 
 async function fetchRiskEngineHealth() {
   try {
-    const res = await fetch(`${RISK_API_URL}/api/health`);
+    const url = RISK_API_URL || "http://localhost:3001";
+    const res = await fetch(`${url}/api/health`);
     if (!res.ok) return null;
     return await res.json();
   } catch {
@@ -85,10 +85,12 @@ function decisionBadge(decision: string) {
 }
 
 export function DashboardView() {
+  const subgraphUrl = SUBGRAPH_URL;
   const { data, isLoading } = useQuery({
-    queryKey: ["dashboard"],
-    queryFn: fetchDashboardData,
+    queryKey: ["dashboard", subgraphUrl],
+    queryFn: () => fetchDashboardData(subgraphUrl),
     refetchInterval: 10_000,
+    enabled: !!subgraphUrl,
   });
   const { data: health } = useQuery({
     queryKey: ["risk-engine-health"],
@@ -134,8 +136,8 @@ export function DashboardView() {
             Reactive Network
           </h3>
           <div className="space-y-1 text-sm">
-            <p className={SUBGRAPH_URL ? "text-emerald-400" : "text-slate-500"}>
-              {SUBGRAPH_URL ? "Subgraph connected" : "Subgraph not configured"}
+            <p className={subgraphUrl ? "text-emerald-400" : "text-slate-500"}>
+              {subgraphUrl ? "Subgraph connected" : "Subgraph not configured"}
             </p>
             <p className="text-xs text-slate-500">
               Cross-chain alerts: {stats?.totalCrossChainAlerts ?? "-"}

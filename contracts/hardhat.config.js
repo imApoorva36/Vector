@@ -1,6 +1,11 @@
 require("dotenv").config();
 require("@nomicfoundation/hardhat-toolbox");
 
+const alchemyKey = process.env.ALCHEMY_API_KEY;
+const baseSepoliaUrl = alchemyKey
+  ? `https://base-sepolia.g.alchemy.com/v2/${alchemyKey}`
+  : process.env.BASE_SEPOLIA_RPC_URL || "https://sepolia.base.org";
+
 module.exports = {
   solidity: {
     version: "0.8.26",
@@ -18,7 +23,7 @@ module.exports = {
       chainId: 31337,
     },
     baseSepolia: {
-      url: process.env.BASE_SEPOLIA_RPC_URL || "https://sepolia.base.org",
+      url: baseSepoliaUrl,
       accounts: process.env.DEPLOYER_PRIVATE_KEY ? [process.env.DEPLOYER_PRIVATE_KEY] : [],
       chainId: 84532,
     },

@@ -24,6 +24,15 @@ export const RISK_API_URL =
 export const SUBGRAPH_URL =
   process.env.NEXT_PUBLIC_SUBGRAPH_URL || "";
 
+/** Subgraph query URL for the given chain. Use for dashboard/stats per chain. */
+export function getSubgraphUrl(chainId: number): string {
+  const s = chainId === 1301 ? "_1301" : chainId === 84532 ? "_84532" : "";
+  const url = s
+    ? process.env[`NEXT_PUBLIC_SUBGRAPH_URL${s}`]
+    : undefined;
+  return url ?? process.env.NEXT_PUBLIC_SUBGRAPH_URL ?? "";
+}
+
 // Chain config from @vector/shared (single source of truth)
 import { CHAIN_IDS, getChainProfile } from "@vector/shared";
 export const SUPPORTED_CHAINS = {

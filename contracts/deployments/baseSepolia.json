@@ -1,0 +1,9 @@
+{
+  "network": "baseSepolia",
+  "chainId": 84532,
+  "VectorGovernance": "0x078Caca2c7580caA9a571368c9B21c722fc48e52",
+  "VectorRiskRegistry": "0x2478f2e45b9eF70EFb28f5fFFf4F695C14363B91",
+  "PolicyEngine": "0xda87f7DcBa74949f750D64C9D99E67aD8De4Ab6e",
+  "VectorHook": "0xB4012dBb91b1B1b9eB8609B6bfd57b377556933D",
+  "VectorReactiveCallback": "0x22f75f72Ab5e515182c579F904089e1De1F21cB1"
+}
