@@ -100,3 +100,101 @@ dataSources:
         - event: CrossChainRiskAlert(indexed uint256,indexed bytes32,indexed address,uint256,string)
           handler: handleCrossChainAlert
       file: ./src/reactive-callback.ts
+  - kind: ethereum
+    name: VectorHook_Unichain
+    network: unichain-sepolia
+    source:
+      address: "0x0000000000000000000000000000000000000000"
+      abi: VectorHook
+      startBlock: 0
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Pool
+        - SwapEvaluation
+        - SwapExecution
+      abis:
+        - name: VectorHook
+          file: ./abis/VectorHook.json
+      eventHandlers:
+        - event: HookSwapEvaluated(indexed bytes32,indexed address,uint8,uint256)
+          handler: handleSwapEvaluated
+        - event: SwapExecuted(indexed bytes32,indexed address,int128,int128)
+          handler: handleSwapExecuted
+        - event: SwapBlockedByPolicy(bytes32,uint256,string)
+          handler: handleSwapBlocked
+      file: ./src/vector-hook.ts
+  - kind: ethereum
+    name: PolicyEngine_Unichain
+    network: unichain-sepolia
+    source:
+      address: "0x0000000000000000000000000000000000000000"
+      abi: PolicyEngine
+      startBlock: 0
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Pool
+        - SwapEvaluation
+        - ProtocolStats
+      abis:
+        - name: PolicyEngine
+          file: ./abis/PolicyEngine.json
+      eventHandlers:
+        - event: SwapEvaluated(indexed bytes32,indexed address,uint8,uint256)
+          handler: handlePolicySwapEvaluated
+        - event: SwapBlocked(indexed bytes32,indexed address,uint256,string)
+          handler: handlePolicySwapBlocked
+        - event: SwapWarned(indexed bytes32,indexed address,uint256,string)
+          handler: handlePolicySwapWarned
+      file: ./src/policy-engine.ts
+  - kind: ethereum
+    name: VectorRiskRegistry_Unichain
+    network: unichain-sepolia
+    source:
+      address: "0x0000000000000000000000000000000000000000"
+      abi: VectorRiskRegistry
+      startBlock: 0
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Pool
+        - PolicyChange
+      abis:
+        - name: VectorRiskRegistry
+          file: ./abis/VectorRiskRegistry.json
+      eventHandlers:
+        - event: PoolProtectionSet(indexed bytes32,uint8,uint256,uint256)
+          handler: handlePoolProtectionSet
+        - event: PoolProtectionRemoved(indexed bytes32)
+          handler: handlePoolProtectionRemoved
+        - event: SignerUpdated(indexed address,indexed address)
+          handler: handleSignerUpdated
+      file: ./src/risk-registry.ts
+  - kind: ethereum
+    name: VectorReactiveCallback_Unichain
+    network: unichain-sepolia
+    source:
+      address: "0x0000000000000000000000000000000000000000"
+      abi: VectorReactiveCallback
+      startBlock: 0
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - CrossChainAlert
+        - ProtocolStats
+      abis:
+        - name: VectorReactiveCallback
+          file: ./abis/VectorReactiveCallback.json
+      eventHandlers:
+        - event: CrossChainRiskAlert(indexed uint256,indexed bytes32,indexed address,uint256,string)
+          handler: handleCrossChainAlert
+      file: ./src/reactive-callback.ts

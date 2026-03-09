@@ -1,7 +1,7 @@
 /**
  * Update subgraph.yaml with contract addresses from deployments/<network>.json.
  * Run after deploy: node scripts/update-subgraph-addresses.js [network]
- * Default network: baseSepolia (or from deployments folder: first json found)
+ * Networks: baseSepolia (updates base-sepolia sources), unichainSepolia (updates unichain-sepolia sources), hardhat (updates base-sepolia)
  */
 
 const fs = require("fs");
@@ -10,10 +10,16 @@ const path = require("path");
 const deploymentsDir = path.join(__dirname, "../deployments");
 const subgraphYamlPath = path.join(__dirname, "../../subgraph/subgraph.yaml");
 
-const contractNames = ["VectorHook", "PolicyEngine", "VectorRiskRegistry", "VectorReactiveCallback"];
+const BASE_CONTRACTS = ["VectorHook", "PolicyEngine", "VectorRiskRegistry", "VectorReactiveCallback"];
+const UNICHAIN_CONTRACTS = ["VectorHook_Unichain", "PolicyEngine_Unichain", "VectorRiskRegistry_Unichain", "VectorReactiveCallback_Unichain"];
+const ADDRESS_KEYS = ["VectorHook", "PolicyEngine", "VectorRiskRegistry", "VectorReactiveCallback"];
 
 function main() {
   const network = process.argv[2] || process.env.NETWORK || "baseSepolia";
+  const isUnichain = network === "unichainSepolia";
+  const dataSourceNames = isUnichain ? UNICHAIN_CONTRACTS : BASE_CONTRACTS;
+  const graphNetwork = isUnichain ? "unichain-sepolia" : "base-sepolia";
+
   let jsonPath = path.join(deploymentsDir, `${network}.json`);
   if (!fs.existsSync(jsonPath)) {
     const first = fs.readdirSync(deploymentsDir).find((f) => f.endsWith(".json"));
@@ -28,11 +34,13 @@ function main() {
 
   let yaml = fs.readFileSync(subgraphYamlPath, "utf8");
 
-  for (const name of contractNames) {
-    const addr = addresses[name];
+  for (let i = 0; i < dataSourceNames.length; i++) {
+    const name = dataSourceNames[i];
+    const addrKey = ADDRESS_KEYS[i];
+    const addr = addresses[addrKey];
     if (!addr) continue;
     const regex = new RegExp(
-      `(name: ${name}\\s+network: [^\\n]+\\s+source:\\s+)(#?\\s*address:.*?\\n)?(\\s+abi:)`,
+      `(name: ${name}\\s+network: ${graphNetwork}\\s+source:\\s+)(#?\\s*address:.*?\\n)?(\\s+abi:)`,
       "s"
     );
     const replacement = `$1      address: "${addr}"\n$3`;
@@ -43,7 +51,7 @@ function main() {
   }
 
   fs.writeFileSync(subgraphYamlPath, yaml);
-  console.log("Updated", subgraphYamlPath);
+  console.log("Updated", subgraphYamlPath, "for network", graphNetwork);
 }
 
 main();

@@ -83,7 +83,7 @@ async function main() {
   console.log("PolicyEngine:", policyAddress);
   console.log("VectorHook:", hookAddress);
   console.log("VectorReactiveCallback:", callbackAddress);
-  console.log("\nNext: npm run copy-abis && node scripts/update-subgraph-addresses.js");
+  console.log("\nNext: npm run copy-abis && node scripts/update-subgraph-addresses.js " + hre.network.name);
   console.log("Set TEE signer: registry.setTEESigner(<teeSignerAddress>)");
   console.log("Set pool protection: registry.setPoolProtection(poolId, mode, blockThreshold, warnThreshold)");
 }

@@ -26,7 +26,7 @@ function getOrCreatePool(poolId: string): Pool {
 }
 
 export function handlePolicySwapEvaluated(event: SwapEvaluated): void {
-  // Already handled by VectorHook handler — skip duplicate counting
+  // Already handled by VectorHook handler; skip duplicate counting
 }
 
 export function handlePolicySwapBlocked(event: SwapBlocked): void {
