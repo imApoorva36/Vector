@@ -1,4 +1,4 @@
-# Vector Subgraph — Uniswap v4 Hook Risk Event Indexing
+# Vector Subgraph - Uniswap v4 Hook Risk Event Indexing
 
 type Pool @entity(immutable: false) {
   id: ID!                          # PoolId (bytes32 hex)

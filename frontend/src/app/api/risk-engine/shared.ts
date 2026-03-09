@@ -1,6 +1,6 @@
 /**
  * Server-only risk engine wiring. Used by /api/health and /api/risk-score.
- * TEE_SIGNER_KEY and RPC_URL are env vars (no NEXT_PUBLIC_ — server-only).
+ * TEE_SIGNER_KEY and RPC_URL are env vars (no NEXT_PUBLIC_; server-only).
  */
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports

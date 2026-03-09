@@ -37,7 +37,7 @@ function analyzeSwapIntent({ amountSpecified, zeroForOne, sender }) {
       signals.push({
         type: "SWAP_INTENT",
         reasonCode: ReasonCodes.SWAP_LARGE,
-        reason: "Unusually large swap amount — potential whale manipulation or sandwich bait",
+        reason: "Unusually large swap amount; potential whale manipulation or sandwich bait",
         score: 15,
       });
     }

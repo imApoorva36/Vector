@@ -3,15 +3,21 @@
   "version": "1.0.0",
   "description": "Off-chain risk scoring engine for Vector Hook - TEE-compatible attestation service",
   "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./signer": "./src/attestation/signer.js",
+    "./cache": "./src/cache.js"
+  },
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
     "test": "node src/test.js"
   },
   "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.3.1",
     "ethers": "^6.13.0",
     "express": "^4.21.0",
-    "cors": "^2.8.5",
     "express-rate-limit": "^7.4.0"
   }
 }
