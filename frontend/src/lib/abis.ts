@@ -41,7 +41,6 @@ export const RISK_REGISTRY_ABI = [
       { name: "mode", type: "uint8" },
       { name: "blockThreshold", type: "uint256" },
       { name: "warnThreshold", type: "uint256" },
-      { name: "attestationTTL", type: "uint256" },
     ],
     outputs: [],
   },
@@ -58,24 +57,16 @@ export const RISK_REGISTRY_ABI = [
     stateMutability: "view",
     inputs: [{ name: "poolId", type: "bytes32" }],
     outputs: [
-      {
-        name: "",
-        type: "tuple",
-        components: [
-          { name: "mode", type: "uint8" },
-          { name: "blockThreshold", type: "uint256" },
-          { name: "warnThreshold", type: "uint256" },
-          { name: "attestationTTL", type: "uint256" },
-          { name: "active", type: "bool" },
-        ],
-      },
+      { name: "mode", type: "uint8" },
+      { name: "blockThreshold", type: "uint256" },
+      { name: "warnThreshold", type: "uint256" },
     ],
   },
   {
-    name: "setSigner",
+    name: "setTEESigner",
     type: "function",
     stateMutability: "nonpayable",
-    inputs: [{ name: "newSigner", type: "address" }],
+    inputs: [{ name: "signer", type: "address" }],
     outputs: [],
   },
   {

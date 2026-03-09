@@ -60,8 +60,8 @@ async function fetchDashboardData(subgraphUrl: string) {
 
 async function fetchRiskEngineHealth() {
   try {
-    const url = RISK_API_URL || "http://localhost:3001";
-    const res = await fetch(`${url}/api/health`);
+    const base = RISK_API_URL || "";
+    const res = await fetch(`${base}/api/health`);
     if (!res.ok) return null;
     return await res.json();
   } catch {
@@ -123,6 +123,9 @@ export function DashboardView() {
                 <p className="truncate font-mono text-xs text-slate-500">
                   {health.signerAddress}
                 </p>
+              )}
+              {!health.signerConfigured && health.hint && (
+                <p className="text-xs text-amber-500/90">{health.hint}</p>
               )}
               <p className="text-xs text-slate-500">Cache size: {health.cacheSize ?? "-"}</p>
             </div>

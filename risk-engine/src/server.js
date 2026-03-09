@@ -1,3 +1,8 @@
+const path = require("path");
+// Load .env from risk-engine directory (works whether started from risk-engine/ or repo root)
+const envPath = path.join(__dirname, "..", ".env");
+require("dotenv").config({ path: envPath, quiet: true });
+
 /**
  * Vector Risk Engine - Express API Server
  *
@@ -36,14 +41,18 @@ const limiter = rateLimit({
 });
 app.use("/api/", limiter);
 
-// Initialize signer
-const TEE_SIGNER_KEY = process.env.TEE_SIGNER_KEY;
+// Initialize signer (trim to avoid spaces from .env)
+const TEE_SIGNER_KEY = (process.env.TEE_SIGNER_KEY || "").trim();
 let signer = null;
 if (TEE_SIGNER_KEY) {
-  signer = new AttestationSigner(TEE_SIGNER_KEY);
-  logger.info("TEE signer initialized", { signerAddress: signer.address });
+  try {
+    signer = new AttestationSigner(TEE_SIGNER_KEY);
+    logger.info("TEE signer initialized", { signerAddress: signer.address });
+  } catch (err) {
+    logger.warn("TEE_SIGNER_KEY invalid; attestations unavailable", { error: err.message });
+  }
 } else {
-  logger.warn("TEE_SIGNER_KEY not set; attestations will be unavailable");
+  logger.warn("TEE_SIGNER_KEY not set; attestations will be unavailable. Set it in risk-engine/.env and restart.");
 }
 
 // Default provider
@@ -165,6 +174,7 @@ app.get("/api/health", (req, res) => {
     rpcConfigured: !!defaultProvider,
     cacheSize: cacheSize(),
     timestamp: Math.floor(Date.now() / 1000),
+    ...(!signer && { hint: "Set TEE_SIGNER_KEY in risk-engine/.env and restart the risk engine." }),
   });
 });
 

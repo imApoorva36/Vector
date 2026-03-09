@@ -18,8 +18,9 @@ export function getContracts(chainId: number): typeof CONTRACTS {
   };
 }
 
+/** When empty, frontend uses same-origin /api/health and /api/risk-score (built-in risk engine). */
 export const RISK_API_URL =
-  process.env.NEXT_PUBLIC_RISK_API_URL || "http://localhost:3001";
+  process.env.NEXT_PUBLIC_RISK_API_URL ?? "";
 
 export const SUBGRAPH_URL =
   process.env.NEXT_PUBLIC_SUBGRAPH_URL || "";

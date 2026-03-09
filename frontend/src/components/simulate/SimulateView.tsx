@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Zap, ShieldCheck, ShieldAlert, ShieldX, Loader2 } from "lucide-react";
 import { SUPPORTED_CHAINS } from "@/lib/constants";
 
-const RISK_API_URL = process.env.NEXT_PUBLIC_RISK_API_URL || "http://localhost:3001";
+const RISK_API_URL = process.env.NEXT_PUBLIC_RISK_API_URL ?? "";
 const MOCK_RISK = process.env.NEXT_PUBLIC_MOCK_RISK === "1" || process.env.NEXT_PUBLIC_MOCK_RISK === "true";
 
 /** Deterministic mock response for demo when risk API is down or NEXT_PUBLIC_MOCK_RISK=1 */
@@ -80,7 +80,8 @@ export function SimulateView() {
         return;
       }
 
-      const res = await fetch(`${RISK_API_URL}/api/risk-score`, {
+      const base = RISK_API_URL || "";
+      const res = await fetch(`${base}/api/risk-score`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
