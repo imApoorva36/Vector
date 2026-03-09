@@ -77,9 +77,12 @@ async function assessSwapRisk(params) {
   });
   signals.push(...intentSignals);
 
-  // ── Layer 3: Token Threat Intel ──
-  const { signals: threatSignals } = await runTokenThreatIntel(targetToken, chainId);
-  signals.push(...threatSignals);
+  // ── Layer 3: Token Threat Intel — check both tokens (either side can be malicious) ──
+  const { signals: threatSignals0 } = await runTokenThreatIntel(token0, chainId);
+  const { signals: threatSignals1 } = token1 !== token0
+    ? await runTokenThreatIntel(token1, chainId)
+    : { signals: [] };
+  signals.push(...threatSignals0, ...threatSignals1);
 
   // ── Layer 4 & 5: On-chain + bytecode (need provider) ──
   if (provider) {

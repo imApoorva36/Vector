@@ -8,7 +8,7 @@ dataSources:
     source:
       address: "0x9fe666729cCe60645b4e9ec4672A7C9cCa9FE87f"
       abi: VectorHook
-      startBlock: 0
+      startBlock: 46184000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -34,7 +34,7 @@ dataSources:
     source:
       address: "0xa1Afa7158d8d47D66E00B6891ea54B35B0840cf4"
       abi: PolicyEngine
-      startBlock: 0
+      startBlock: 46184000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -60,7 +60,7 @@ dataSources:
     source:
       address: "0x27142bFCa9Ac9B7FaE773d46656deBF4f4E39aAe"
       abi: VectorRiskRegistry
-      startBlock: 0
+      startBlock: 46184000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -85,7 +85,7 @@ dataSources:
     source:
       address: "0xdeE66A4e8aAf73e47634B96bb65D7011deb0073C"
       abi: VectorReactiveCallback
-      startBlock: 0
+      startBlock: 46184000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7

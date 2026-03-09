@@ -1,8 +1,76 @@
 "use client";
 
 import { useState } from "react";
-import { Zap, ShieldCheck, ShieldAlert, ShieldX, Loader2 } from "lucide-react";
-import { SUPPORTED_CHAINS } from "@/lib/constants";
+import { Zap, ShieldCheck, ShieldAlert, ShieldX, Loader2, ExternalLink } from "lucide-react";
+import { useAccount, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { SUPPORTED_CHAINS, getContracts } from "@/lib/constants";
+
+const HOOK_ABI = [
+  {
+    name: "evaluateSwap",
+    type: "function",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "poolId",          type: "bytes32" },
+      { name: "sender",          type: "address" },
+      { name: "zeroForOne",      type: "bool"    },
+      { name: "amountSpecified", type: "int256"  },
+      { name: "hookData",        type: "bytes"   },
+    ],
+    outputs: [{ name: "decision", type: "uint8" }],
+  },
+] as const;
+
+const BLOCK_EXPLORERS: Record<number, string> = {
+  84532: "https://sepolia.basescan.org/tx/",
+  1301:  "https://unichain-sepolia.blockscout.com/tx/",
+};
+
+const DEMO_POOL_ID = "0x0000000000000000000000000000000000000000000000000000000000000001";
+const DEMO_SENDER  = "0x0000000000000000000000000000000000000001";
+const WETH         = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
+
+const QUICK_FILLS = [
+  {
+    label: "ALLOW",
+    subtitle: "USDC + WETH (allowlist)",
+    color: "border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10",
+    values: {
+      poolId: DEMO_POOL_ID,
+      tokenIn: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      tokenOut: WETH,
+      amountIn: "1000000000000000000",
+      sender: DEMO_SENDER,
+      chainId: SUPPORTED_CHAINS.BASE_SEPOLIA,
+    },
+  },
+  {
+    label: "WARN",
+    subtitle: "Unknown EOA token",
+    color: "border-amber-500/40 text-amber-400 hover:bg-amber-500/10",
+    values: {
+      poolId: DEMO_POOL_ID,
+      tokenIn: "0x742d35Cc6634C0532925a3b8D4C82B5e97c50B8d",
+      tokenOut: WETH,
+      amountIn: "1000000000000000000",
+      sender: DEMO_SENDER,
+      chainId: SUPPORTED_CHAINS.BASE_SEPOLIA,
+    },
+  },
+  {
+    label: "BLOCK",
+    subtitle: "Known malicious token",
+    color: "border-red-500/40 text-red-400 hover:bg-red-500/10",
+    values: {
+      poolId: DEMO_POOL_ID,
+      tokenIn: "0x000000000000000000000000000000000000dead",
+      tokenOut: WETH,
+      amountIn: "1000000000000000000",
+      sender: DEMO_SENDER,
+      chainId: SUPPORTED_CHAINS.BASE_SEPOLIA,
+    },
+  },
+] as const;
 
 const CHAIN_OPTIONS = [
   { id: SUPPORTED_CHAINS.BASE_SEPOLIA, label: "Base Sepolia" },
@@ -15,6 +83,7 @@ interface RiskResult {
   breakdown: Array<{ layer: string; score: number; details: string }>;
   attestation: {
     signature: string;
+    encodedAttestation?: string;
     expiry: number;
     signer: string;
   };
@@ -29,6 +98,7 @@ function decisionConfig(decision: string) {
 }
 
 export function SimulateView() {
+  const { isConnected, chainId: walletChainId } = useAccount();
   const [poolId, setPoolId] = useState("");
   const [tokenIn, setTokenIn] = useState("");
   const [tokenOut, setTokenOut] = useState("");
@@ -38,6 +108,50 @@ export function SimulateView() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<RiskResult | null>(null);
   const [error, setError] = useState("");
+
+  const HOOK_ADDRESS = getContracts(walletChainId ?? chainId).VECTOR_HOOK;
+
+  const {
+    writeContract: writeEval,
+    data: evalTxHash,
+    isPending: evalPending,
+    error: evalError,
+    reset: resetEval,
+  } = useWriteContract();
+  const { isLoading: evalConfirming, isSuccess: evalSuccess } =
+    useWaitForTransactionReceipt({ hash: evalTxHash });
+
+  const explorerBase = BLOCK_EXPLORERS[walletChainId ?? chainId] ?? "";
+
+  function handleEvaluateOnChain() {
+    if (!result?.attestation?.encodedAttestation || !HOOK_ADDRESS) return;
+    const effectivePoolId = (poolId || "0x" + "00".repeat(32)) as `0x${string}`;
+    const effectiveSender = (sender || "0x" + "00".repeat(20)) as `0x${string}`;
+    resetEval();
+    writeEval({
+      address: HOOK_ADDRESS,
+      abi: HOOK_ABI,
+      functionName: "evaluateSwap",
+      args: [
+        effectivePoolId,
+        effectiveSender,
+        true,
+        BigInt(amountIn || "1000000000000000000"),
+        result.attestation.encodedAttestation as `0x${string}`,
+      ],
+    });
+  }
+
+  function applyQuickFill(fill: typeof QUICK_FILLS[number]) {
+    setPoolId(fill.values.poolId);
+    setTokenIn(fill.values.tokenIn);
+    setTokenOut(fill.values.tokenOut);
+    setAmountIn(fill.values.amountIn);
+    setSender(fill.values.sender);
+    setChainId(fill.values.chainId);
+    setResult(null);
+    setError("");
+  }
 
   async function handleSimulate() {
     setLoading(true);
@@ -76,10 +190,27 @@ export function SimulateView() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
       <h1 className="mb-2 text-3xl font-bold">Swap Risk Simulator</h1>
-      <p className="mb-8 text-slate-400">
+      <p className="mb-6 text-slate-400">
         Simulate a swap against the risk engine to preview the attestation and
         enforcement decision before executing on-chain.
       </p>
+
+      {/* Quick fill scenario buttons */}
+      <div className="mb-6">
+        <p className="mb-2 text-xs font-medium uppercase tracking-wider text-slate-500">Quick Fill</p>
+        <div className="flex flex-wrap gap-2">
+          {QUICK_FILLS.map((fill) => (
+            <button
+              key={fill.label}
+              onClick={() => applyQuickFill(fill)}
+              className={`rounded-lg border px-4 py-2 text-sm font-semibold transition ${fill.color}`}
+            >
+              {fill.label}
+              <span className="ml-1.5 font-normal text-slate-500">— {fill.subtitle}</span>
+            </button>
+          ))}
+        </div>
+      </div>
 
       <div className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-3">
@@ -226,6 +357,59 @@ export function SimulateView() {
                   </p>
                 </div>
               </div>
+            )}
+
+            {/* Evaluate on-chain */}
+            {result.decision !== "BLOCK" && result.attestation?.encodedAttestation && (
+              <div className="mt-4 rounded-lg border border-vector-border bg-vector-dark/30 p-4">
+                <p className="mb-2 text-xs text-slate-400">
+                  <span className="font-semibold text-slate-300">Evaluate On-chain</span>
+                  {" "}— sends this attestation to VectorHook on-chain, emitting a{" "}
+                  <code className="text-slate-400">HookSwapEvaluated</code> event that populates the Dashboard.
+                  {!isConnected && <span className="ml-1 text-amber-400"> (connect wallet first)</span>}
+                </p>
+                <button
+                  onClick={handleEvaluateOnChain}
+                  disabled={evalPending || evalConfirming || !isConnected || !HOOK_ADDRESS}
+                  className="inline-flex items-center gap-2 rounded-lg border border-vector-primary/40 bg-vector-primary/10 px-4 py-2 text-sm font-semibold text-vector-primary transition hover:bg-vector-primary/20 disabled:opacity-40"
+                >
+                  {evalPending || evalConfirming ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <ExternalLink className="h-4 w-4" />
+                  )}
+                  {evalPending ? "Signing..." : evalConfirming ? "Confirming..." : "Evaluate On-chain"}
+                </button>
+
+                {evalError && (
+                  <p className="mt-2 text-xs text-red-400 break-all">
+                    {evalError.message}
+                  </p>
+                )}
+
+                {evalSuccess && evalTxHash && (
+                  <div className="mt-2 text-xs text-emerald-400 space-y-0.5">
+                    <p className="font-semibold">Confirmed! Dashboard will update in ~30s.</p>
+                    <p className="font-mono break-all text-emerald-500/70">{evalTxHash}</p>
+                    {explorerBase && (
+                      <a
+                        href={`${explorerBase}${evalTxHash}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-emerald-400 underline"
+                      >
+                        View on explorer <ExternalLink className="h-3 w-3" />
+                      </a>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {result.decision === "BLOCK" && (
+              <p className="mt-4 text-xs text-slate-500 italic">
+                BLOCK decisions revert on-chain — no on-chain evaluation submitted for this scenario.
+              </p>
             )}
           </div>
         )}
