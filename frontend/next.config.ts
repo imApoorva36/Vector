@@ -15,6 +15,8 @@ const nextConfig: NextConfig = {
     }
     return config;
   },
+  // Prevent Next.js from trying to bundle the vendored risk-engine CJS modules on the client side
+  serverExternalPackages: [],
 };
 
 export default nextConfig;

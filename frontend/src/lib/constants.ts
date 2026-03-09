@@ -18,10 +18,6 @@ export function getContracts(chainId: number): typeof CONTRACTS {
   };
 }
 
-/** When empty, frontend uses same-origin /api/health and /api/risk-score (built-in risk engine). */
-export const RISK_API_URL =
-  process.env.NEXT_PUBLIC_RISK_API_URL ?? "";
-
 export const SUBGRAPH_URL =
   process.env.NEXT_PUBLIC_SUBGRAPH_URL || "";
 
@@ -34,10 +30,24 @@ export function getSubgraphUrl(chainId: number): string {
   return url ?? process.env.NEXT_PUBLIC_SUBGRAPH_URL ?? "";
 }
 
-// Chain config from @vector/shared (single source of truth)
-import { CHAIN_IDS, getChainProfile } from "@vector/shared";
+// Chain config (inlined from shared package)
+export const CHAIN_IDS = {
+  BASE_SEPOLIA: 84532,
+  UNICHAIN_SEPOLIA: 1301,
+  LOCALHARDHAT: 31337,
+} as const;
+
+export function getChainProfile(chainId: number) {
+  const defaults = { blockThreshold: 70, warnThreshold: 31, attestationTTLSeconds: 300 };
+  const profiles: Record<number, typeof defaults> = {
+    [CHAIN_IDS.BASE_SEPOLIA]: defaults,
+    [CHAIN_IDS.UNICHAIN_SEPOLIA]: defaults,
+    [CHAIN_IDS.LOCALHARDHAT]: defaults,
+  };
+  return profiles[chainId] ?? defaults;
+}
+
 export const SUPPORTED_CHAINS = {
   BASE_SEPOLIA: CHAIN_IDS.BASE_SEPOLIA,
   UNICHAIN_SEPOLIA: CHAIN_IDS.UNICHAIN_SEPOLIA,
 } as const;
-export { getChainProfile };

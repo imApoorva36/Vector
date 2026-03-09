@@ -4,35 +4,6 @@ import { useState } from "react";
 import { Zap, ShieldCheck, ShieldAlert, ShieldX, Loader2 } from "lucide-react";
 import { SUPPORTED_CHAINS } from "@/lib/constants";
 
-const RISK_API_URL = process.env.NEXT_PUBLIC_RISK_API_URL ?? "";
-const MOCK_RISK = process.env.NEXT_PUBLIC_MOCK_RISK === "1" || process.env.NEXT_PUBLIC_MOCK_RISK === "true";
-
-/** Deterministic mock response for demo when risk API is down or NEXT_PUBLIC_MOCK_RISK=1 */
-function getMockRiskResult(tokenIn: string, tokenOut: string): RiskResult {
-  const dead = "0x000000000000000000000000000000000000dead".toLowerCase();
-  const isSuspicious =
-    (tokenIn || "").toLowerCase() === dead || (tokenOut || "").toLowerCase() === dead;
-  const riskScore = isSuspicious ? 92 : 0;
-  const decision = isSuspicious ? "BLOCK" : "ALLOW";
-  const now = Math.floor(Date.now() / 1000);
-  return {
-    riskScore,
-    decision,
-    breakdown: isSuspicious
-      ? [
-          { layer: "THREAT_INTEL", score: 92, details: "Known malicious token (mock)" },
-        ]
-      : [
-          { layer: "ALLOWLIST", score: 0, details: "Trusted tokens (mock)" },
-        ],
-    attestation: {
-      signature: "0x" + "00".repeat(65),
-      expiry: now + 300,
-      signer: "0x0000000000000000000000000000000000000001",
-    },
-  };
-}
-
 const CHAIN_OPTIONS = [
   { id: SUPPORTED_CHAINS.BASE_SEPOLIA, label: "Base Sepolia" },
   { id: SUPPORTED_CHAINS.UNICHAIN_SEPOLIA, label: "Unichain Sepolia" },
@@ -74,14 +45,7 @@ export function SimulateView() {
     setResult(null);
 
     try {
-      if (MOCK_RISK) {
-        await new Promise((r) => setTimeout(r, 400));
-        setResult(getMockRiskResult(tokenIn, tokenOut));
-        return;
-      }
-
-      const base = RISK_API_URL || "";
-      const res = await fetch(`${base}/api/risk-score`, {
+      const res = await fetch("/api/risk-score", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -100,9 +64,8 @@ export function SimulateView() {
 
       const data = await res.json();
       setResult(data);
-    } catch (err: any) {
-      setResult(getMockRiskResult(tokenIn, tokenOut));
-      setError("");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Risk assessment failed. Check server logs.");
     } finally {
       setLoading(false);
     }
@@ -204,11 +167,11 @@ export function SimulateView() {
         )}
 
         {result && dc && (
-          <div className={`rounded-xl border ${dc.border} ${dc.bg} p-6`}>
+          <div data-testid="risk-result" className={`rounded-xl border ${dc.border} ${dc.bg} p-6`}>
             <div className="flex items-center gap-4">
               <div className={dc.color}>{dc.icon}</div>
               <div>
-                <p className={`text-2xl font-bold ${dc.color}`}>
+                <p data-testid="risk-decision" className={`text-2xl font-bold ${dc.color}`}>
                   {result.decision}
                 </p>
                 <p className="text-sm text-slate-400">

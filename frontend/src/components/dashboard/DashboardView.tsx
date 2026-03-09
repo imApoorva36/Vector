@@ -11,11 +11,11 @@ import {
   Key,
   Zap,
 } from "lucide-react";
-import { SUBGRAPH_URL, RISK_API_URL } from "@/lib/constants";
+import { SUBGRAPH_URL } from "@/lib/constants";
 
 async function fetchDashboardData(subgraphUrl: string) {
   if (!subgraphUrl) return null;
-
+  try {
   const res = await fetch(subgraphUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -55,13 +55,16 @@ async function fetchDashboardData(subgraphUrl: string) {
       }`,
     }),
   });
-  return (await res.json()).data;
+  const json = await res.json();
+  return json.data ?? null;
+  } catch {
+    return null;
+  }
 }
 
 async function fetchRiskEngineHealth() {
   try {
-    const base = RISK_API_URL || "";
-    const res = await fetch(`${base}/api/health`);
+    const res = await fetch("/api/health");
     if (!res.ok) return null;
     return await res.json();
   } catch {

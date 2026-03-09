@@ -13,7 +13,7 @@ export async function GET() {
     cacheSize: getCacheSize(),
     timestamp: Math.floor(Date.now() / 1000),
     ...(!signer && {
-      hint: "Set TEE_SIGNER_KEY (and RPC_URL) in your hosting env (e.g. Vercel → Project Settings → Environment Variables). Leave NEXT_PUBLIC_RISK_API_URL empty to use this built-in API.",
+      hint: "Set TEE_SIGNER_KEY (and RPC_URL) in your hosting env (e.g. Vercel → Project Settings → Environment Variables). The risk engine runs built-in as a Next.js API route.",
     }),
   });
 }

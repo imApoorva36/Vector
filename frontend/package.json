@@ -11,8 +11,6 @@
     "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
-    "@vector/shared": "file:../shared",
-    "risk-engine": "file:../risk-engine",
     "ethers": "^6.13.0",
     "next": "^15.1.0",
     "react": "^19.0.0",
@@ -21,7 +19,6 @@
     "wagmi": "^2.14.0",
     "viem": "^2.21.0",
     "@rainbow-me/rainbowkit": "^2.2.0",
-    "recharts": "^2.13.0",
     "lucide-react": "^0.468.0",
     "clsx": "^2.1.1",
     "tailwind-merge": "^2.6.0"
