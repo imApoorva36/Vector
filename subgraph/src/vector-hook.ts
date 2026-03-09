@@ -2,6 +2,7 @@ import { BigInt, Bytes } from "@graphprotocol/graph-ts";
 import {
   HookSwapEvaluated,
   SwapExecuted,
+  SwapBlockedByPolicy,
 } from "../generated/VectorHook/VectorHook";
 import { Pool, SwapEvaluation, SwapExecution, ProtocolStats } from "../generated/schema";
 
@@ -94,4 +95,30 @@ export function handleSwapExecuted(event: SwapExecuted): void {
   execution.timestamp = event.block.timestamp;
   execution.transactionHash = event.transaction.hash;
   execution.save();
+}
+
+export function handleSwapBlocked(event: SwapBlockedByPolicy): void {
+  let poolId = event.params.poolId.toHexString();
+  let pool = getOrCreatePool(poolId);
+  pool.blockedSwaps = pool.blockedSwaps.plus(BigInt.fromI32(1));
+  pool.totalSwaps = pool.totalSwaps.plus(BigInt.fromI32(1));
+  pool.lastUpdated = event.block.timestamp;
+  pool.save();
+
+  let evalId = event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
+  let evaluation = new SwapEvaluation(evalId);
+  evaluation.pool = poolId;
+  evaluation.sender = event.transaction.from;
+  evaluation.decision = "BLOCK";
+  evaluation.riskScore = event.params.riskScore.toI32();
+  evaluation.reason = event.params.reason;
+  evaluation.blockNumber = event.block.number;
+  evaluation.timestamp = event.block.timestamp;
+  evaluation.transactionHash = event.transaction.hash;
+  evaluation.save();
+
+  let stats = getOrCreateStats();
+  stats.totalSwapEvaluations = stats.totalSwapEvaluations.plus(BigInt.fromI32(1));
+  stats.totalBlockedSwaps = stats.totalBlockedSwaps.plus(BigInt.fromI32(1));
+  stats.save();
 }
