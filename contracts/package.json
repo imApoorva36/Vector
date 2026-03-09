@@ -7,7 +7,7 @@
     "test": "npx hardhat test",
     "copy-abis": "node scripts/copy-abis.js",
     "update-subgraph": "node scripts/update-subgraph-addresses.js",
-    "integration-test": "node scripts/integration-test.js",
+    "integration-test": "npx hardhat run scripts/integration-test.js --network localhost",
     "deploy:baseSepolia": "npx hardhat run scripts/deploy.js --network baseSepolia",
     "deploy:unichainSepolia": "npx hardhat run scripts/deploy.js --network unichainSepolia",
     "node": "npx hardhat node",

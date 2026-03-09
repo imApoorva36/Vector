@@ -18,6 +18,12 @@ subgraph/generated/
 .DS_Store
 Thumbs.db
 
+# Playwright
+frontend/playwright-report/
+frontend/test-results/
+playwright-report/
+test-results/
+
 # Logs
 *.log
 npm-debug.log*

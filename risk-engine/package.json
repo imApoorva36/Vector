@@ -1,7 +1,7 @@
 {
   "name": "risk-engine",
   "version": "1.0.0",
-  "description": "Off-chain risk scoring engine for Vector Hook - TEE-compatible attestation service",
+  "description": "Optional standalone risk scoring server for Vector Hook. The same pipeline is embedded in the frontend (Next.js API routes). Use this for standalone/microservice deployments.",
   "main": "src/index.js",
   "exports": {
     ".": "./src/index.js",

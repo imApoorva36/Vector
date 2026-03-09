@@ -4,9 +4,9 @@
  */
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const AttestationSigner = require("risk-engine/signer").AttestationSigner;
+const AttestationSigner = require("../../../lib/risk-engine/signer").AttestationSigner;
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const { size: cacheSize } = require("risk-engine/cache");
+const { size: cacheSize } = require("../../../lib/risk-engine/cache");
 
 const TEE_SIGNER_KEY = (process.env.TEE_SIGNER_KEY || "").trim();
 const RPC_URL = process.env.RPC_URL;

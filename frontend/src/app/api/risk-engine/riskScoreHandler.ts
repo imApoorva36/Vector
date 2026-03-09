@@ -6,7 +6,7 @@ const seenNonces = new Map<string, number>();
 
 function getAssessSwapRisk() {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  return require("risk-engine").assessSwapRisk;
+  return require("../../../lib/risk-engine").assessSwapRisk;
 }
 
 export async function handleRiskScoreRequest(req: NextRequest): Promise<NextResponse> {
@@ -23,7 +23,6 @@ export async function handleRiskScoreRequest(req: NextRequest): Promise<NextResp
       amountIn,
       sender,
       chainId = 1,
-      rpcUrl,
       nonce,
     } = body;
     const token0 = t0 ?? tokenIn;
@@ -49,12 +48,7 @@ export async function handleRiskScoreRequest(req: NextRequest): Promise<NextResp
       );
     }
 
-    let provider = getDefaultProvider();
-    if (rpcUrl && typeof rpcUrl === "string") {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { ethers } = require("ethers");
-      provider = new ethers.JsonRpcProvider(rpcUrl);
-    }
+    const provider = getDefaultProvider();
 
     const assessSwapRisk = getAssessSwapRisk();
     // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -72,7 +66,7 @@ export async function handleRiskScoreRequest(req: NextRequest): Promise<NextResp
     });
 
     const signer = getSigner();
-    let attestation: { signature: string; expiry: number; signer: string } | null = null;
+    let attestation: { signature: string; encodedAttestation?: string; expiry: number; signer: string } | null = null;
     if (signer) {
       const expiry = Math.floor(Date.now() / 1000) + 300;
       const signed = await signer.sign({
@@ -82,9 +76,10 @@ export async function handleRiskScoreRequest(req: NextRequest): Promise<NextResp
         riskScore: assessment.riskScore,
         expiry,
         chainId,
-      }) as { signature: string; expiry: number; signerAddress: string };
+      }) as { signature: string; encodedAttestation: string; expiry: number; signerAddress: string };
       attestation = {
         signature: signed.signature,
+        encodedAttestation: signed.encodedAttestation,
         expiry: signed.expiry,
         signer: signed.signerAddress ?? signer.address,
       };

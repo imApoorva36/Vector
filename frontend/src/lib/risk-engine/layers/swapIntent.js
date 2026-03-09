@@ -1,33 +1,20 @@
 /**
- * Layer 2: Swap intent analysis
- * Analyzes swap parameters for patterns associated with MEV, sandwich attacks,
- * or abnormal swap behavior that may harm liquidity providers.
+ * Layer 2: Swap intent analysis.
  */
 
 const { ReasonCodes } = require("../reasonCodes");
 
-// Thresholds for suspicious swap patterns
-const LARGE_SWAP_THRESHOLD_ETH = "50";  // > 50 ETH equivalent triggers scrutiny
-const MICRO_SWAP_THRESHOLD_WEI = "1000"; // Very small swaps may be probing
+const LARGE_SWAP_THRESHOLD_ETH = "50";
+const MICRO_SWAP_THRESHOLD_WEI = "1000";
 
-/**
- * Analyze swap intent for suspicious patterns.
- * @param {object} params
- * @param {string} params.amountSpecified - Amount in wei string
- * @param {boolean} params.zeroForOne - Direction
- * @param {string} params.sender - Initiator address
- * @returns {{ signals: Array<{ type: string, reason: string, score: number }> }}
- */
 function analyzeSwapIntent({ amountSpecified, zeroForOne, sender }) {
   const signals = [];
-
   if (!amountSpecified) return { signals };
 
   const absAmount = amountSpecified.startsWith("-")
     ? amountSpecified.slice(1)
     : amountSpecified;
 
-  // Very large swaps may indicate whale manipulation or sandwich setup
   try {
     const amountBigInt = BigInt(absAmount);
     const largeThreshold = BigInt(LARGE_SWAP_THRESHOLD_ETH) * BigInt(10 ** 18);

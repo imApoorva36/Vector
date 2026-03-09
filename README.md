@@ -30,6 +30,11 @@ Most pool protection lives off-chain or in the UI. You rely on routing filters o
   </tr>
 </table>
 
+---
+
+## Demo
+
+> **Demo video:** <!-- TODO: paste your demo video link here -->
 
 ---
 
@@ -57,7 +62,9 @@ We asked: what if the **hook** enforced risk at execution time? Not a blacklist 
 
 Vector is a Uniswap v4 hook that gates swaps using **cryptographic risk attestations**. Before a swap executes, the hook decodes `hookData`, verifies an off-chain risk engine's signature over the swap context (pool, direction, amount, score, expiry, chain), and enforces a **hybrid policy** per pool: protected pools are fail-closed (no valid attestation → revert); unprotected pools are fail-open (always allow, emit warn on high risk). The guarantee lives in the hook's `revert`. No frontend or RPC filter to bypass.
 
-When a user (or aggregator) wants to swap: frontend calls the risk API, the risk engine runs a 5-layer pipeline, the TEE (or dev signer) signs an attestation, the frontend encodes (riskScore, expiry, signature) into hookData, the user submits the swap, and VectorHook.beforeSwap() verifies attestation and policy. Result: ALLOW, WARN, or BLOCK. BLOCK means revert. Nothing to bypass; the check is the hook.
+When a user (or aggregator) wants to swap: frontend calls the risk API, the risk engine runs a 5-layer pipeline, the TEE (or dev signer) signs an attestation, the frontend encodes (riskScore, expiry, signature) into hookData, the user submits the swap, and `VectorHookV4.beforeSwap()` verifies attestation and policy. Result: ALLOW, WARN, or BLOCK. BLOCK means revert. Nothing to bypass; the check is the hook.
+
+> **Two-layer hook design:** `VectorHook` is the standalone core contract — it owns `evaluateSwap()` and can be called directly in tests or via integrations. `VectorHookV4` is the Uniswap v4 `IHooks` adapter: its `beforeSwap()` delegates to `VectorHook.evaluateSwap()`, and `afterSwap()` emits `SwapExecuted`. `VectorHookV4` is deployed only when `POOL_MANAGER_ADDRESS` is configured; guarded by `onlyPoolManager`. This split keeps the core logic fully testable without a PoolManager and makes the hook lifecycle layer thin and auditable.
 
 **What runs on every swap:**
 
@@ -238,7 +245,7 @@ Reactive's “subscribe on one chain, act on another” fit Vector well. SwapBlo
 
 - Node.js 18+
 - Testnet ETH ([Base Sepolia faucet](https://www.alchemy.com/faucets/base-sepolia))
-- For attestation: set `TEE_SIGNER_KEY` in risk-engine (and register signer on registry after deploy)
+- For attestation: set `TEE_SIGNER_KEY` in `frontend/.env` (and register signer on registry after deploy)
 
 ### Contracts
 
@@ -267,26 +274,6 @@ npx hardhat run scripts/deploy.js --network unichainSepolia
 npm run copy-abis && node scripts/update-subgraph-addresses.js baseSepolia
 ```
 
-### Risk engine
-
-1. Navigate to the risk engine:
-```bash
-cd risk-engine
-```
-
-2. Install and copy env:
-```bash
-npm install
-cp .env.example .env
-```
-3. Set `TEE_SIGNER_KEY` in `.env` (or leave unset for no attestations). Run tests: `node src/test.js`.
-
-4. Start the API server:
-```bash
-node src/server.js
-```
-Server runs at `http://localhost:3001`. Health: `GET /api/health`. Risk: `POST /api/risk-score`.
-
 ### Frontend
 
 1. Navigate to the frontend:
@@ -299,13 +286,13 @@ cd frontend
 npm install
 cp .env.example .env
 ```
-3. Fill in contract addresses, `NEXT_PUBLIC_RISK_API_URL=http://localhost:3001`, `NEXT_PUBLIC_SUBGRAPH_URL`, and `NEXT_PUBLIC_WC_PROJECT_ID`.
+3. Fill in `TEE_SIGNER_KEY` (attestation signer private key), `RPC_URL`, contract addresses, `NEXT_PUBLIC_SUBGRAPH_URL`, and `NEXT_PUBLIC_WC_PROJECT_ID`. The 5-layer risk pipeline runs inside Next.js API routes — no separate server needed.
 
 4. Start the dev server:
 ```bash
 npm run dev
 ```
-App runs at [http://localhost:3000](http://localhost:3000). Use **Pools** (set protection), **Simulate** (risk + attestation), **Dashboard** (stats + evaluations). Set `NEXT_PUBLIC_MOCK_RISK=1` to use mock risk when the risk API is down.
+App runs at [http://localhost:3000](http://localhost:3000). Use **Pools** (set protection), **Simulate** (risk + attestation), **Dashboard** (stats + evaluations).
 
 ### Subgraph (optional, after deploy)
 
@@ -324,29 +311,32 @@ cd contracts && npx hardhat test
 **Contract tests (15):** VectorRiskRegistry (pool config), PolicyEngine (ALLOW/WARN/BLOCK, pause), VectorHook (attestation verify, replay failure, expiry, unprotected WARN). Reactive: VectorReactiveCallback (unauthorized revert, authorized callback, revoke).
 
 ```bash
-cd risk-engine && npm run test
-```
-
-**Risk engine (17):** Allowlist, swap intent, threat intel, attestation signing, cache.
-
-```bash
 cd frontend && npm run test:e2e
 ```
 
-**E2E (Playwright, 5):** Landing, simulate (with mock), dashboard, pools.
+**E2E (Playwright, 5):** Landing, simulate (risk assessment), dashboard, pools.
 
-**Integration (risk API → hook):** With risk engine running and `TEE_SIGNER_KEY` set:
+**Integration (risk API → hook):** With frontend running (`TEE_SIGNER_KEY` set in `frontend/.env`):
 
 ```bash
-cd contracts && RISK_API_URL=http://localhost:3001 npx hardhat run scripts/integration-test.js --network hardhat
+# Terminal 1: start frontend with TEE_SIGNER_KEY
+cd frontend && npm run dev
+
+# Terminal 2: run integration test
+cd contracts && npx hardhat run scripts/integration-test.js --network hardhat
+```
+
+**Risk engine standalone tests (optional):**
+```bash
+cd risk-engine && npm run test
 ```
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 - **Contracts:** Solidity, Hardhat, OpenZeppelin, Uniswap v4 periphery (hook interfaces)
-- **Risk engine:** Node.js, Express, ethers, 5-layer pipeline, EIP-191 attestation signer
+- **Risk engine:** Node.js (embedded in Next.js API routes), 5-layer pipeline, EIP-191 attestation signer
 - **Frontend:** Next.js 15, TypeScript, Tailwind, wagmi, RainbowKit, TanStack Query
 - **Indexing:** The Graph (subgraph for hook, registry, policy, Reactive callback events)
 - **Networks:** Base Sepolia, Unichain Sepolia
@@ -359,4 +349,4 @@ MIT. See [LICENSE](LICENSE) for details.
 
 ------------------------
 
-Built with ❤️ by [Apoorva Agrawal](https://github.com/imApoorva36) · [GitHub](https://github.com/imApoorva36) · [X @im__apoorva](https://x.com/im__apoorva)
+Built with ❤️ by Apoorva Agrawal · [GitHub](https://github.com/imApoorva36) · [X](https://x.com/im__apoorva)

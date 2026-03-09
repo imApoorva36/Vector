@@ -2,25 +2,31 @@
  * Integration test: Risk API → attestation → hook.evaluateSwap (expect ALLOW).
  *
  * Prerequisites:
- *   1. Risk engine running with TEE_SIGNER_KEY (e.g. node risk-engine/src/server.js)
+ *   1. Frontend running with TEE_SIGNER_KEY set (the built-in /api/risk-score handles attestation)
  *   2. Run against Hardhat node or a network where contracts are deployed
  *
  * Usage:
- *   # Terminal 1: start risk engine
- *   cd risk-engine && node src/server.js
+ *   # Terminal 1: start frontend (with TEE_SIGNER_KEY env var)
+ *   cd frontend && TEE_SIGNER_KEY=0x... npm run dev
  *
  *   # Terminal 2: start Hardhat node (optional, for local deploy)
  *   cd contracts && npx hardhat node
  *
- *   # Terminal 3: run integration test (deploys to localhost, then calls API + hook)
- *   cd contracts && RISK_API_URL=http://localhost:3001 npx hardhat run scripts/integration-test.js --network localhost
+ *   # Terminal 3: run integration test
+ *   cd contracts && npx hardhat run scripts/integration-test.js --network localhost
+ *
+ *   # Override API URL if frontend runs on a different port:
+ *   RISK_API_URL=http://localhost:3000 npx hardhat run scripts/integration-test.js --network localhost
+ *
+ *   # Or point to the deployed Vercel frontend:
+ *   RISK_API_URL=https://your-app.vercel.app npx hardhat run scripts/integration-test.js --network baseSepolia
  *
  *   # Or with existing deployment (set HOOK_ADDRESS, REGISTRY_ADDRESS, POLICY_ADDRESS in .env)
  */
 
 const { ethers } = require("hardhat");
 
-const RISK_API_URL = process.env.RISK_API_URL || "http://localhost:3001";
+const RISK_API_URL = process.env.RISK_API_URL || "http://localhost:3000";
 
 async function main() {
   const [owner] = await ethers.getSigners();
@@ -29,11 +35,11 @@ async function main() {
   // 1) Get signer address from risk engine (must match TEE_SIGNER_KEY)
   const healthRes = await fetch(`${RISK_API_URL}/api/health`);
   if (!healthRes.ok) {
-    throw new Error(`Risk engine not reachable at ${RISK_API_URL}. Start it with: cd risk-engine && node src/server.js`);
+    throw new Error(`Risk API not reachable at ${RISK_API_URL}. Start the frontend: cd frontend && npm run dev`);
   }
   const health = await healthRes.json();
   if (!health.signerConfigured) {
-    throw new Error("Risk engine has no TEE_SIGNER_KEY. Set it in risk-engine/.env");
+    throw new Error("TEE_SIGNER_KEY not set. Add it to frontend/.env");
   }
   const teeSignerAddress = health.signerAddress;
   console.log("Risk engine signer:", teeSignerAddress);
@@ -70,8 +76,9 @@ async function main() {
   // 2) Get attestation from risk API
   const body = {
     poolId,
-    token0: "0x" + "00".repeat(20),
-    token1: "0x" + "00".repeat(20),
+    // Use trusted tokens so the allowlist layer returns ALLOW deterministically.
+    token0: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", // USDC
+    token1: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2", // WETH
     zeroForOne,
     amountSpecified: amountSpecified.toString(),
     sender,
@@ -100,7 +107,7 @@ async function main() {
     amountSpecified,
     hookData
   );
-  if (decision !== 0) {
+  if (decision !== 0n) {
     throw new Error(`Expected ALLOW (0), got decision ${decision}`);
   }
   console.log("Integration test passed: hook.evaluateSwap returned ALLOW.");

@@ -153,6 +153,7 @@ app.post("/api/risk-score", async (req, res) => {
             signature: attestation.signature,
             expiry: attestation.expiry,
             signer: attestation.signerAddress || signer?.address,
+            encodedAttestation: attestation.encodedAttestation,
           }
         : null,
       assessment,
