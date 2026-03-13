@@ -5,9 +5,9 @@
   "scripts": {
     "codegen": "graph codegen",
     "build": "graph build",
-    "deploy": "graph deploy --studio vector -l v0.0.3",
+    "deploy": "graph deploy --studio vector -l v0.0.4",
     "build:unichain": "graph build subgraph-unichain.yaml",
-    "deploy:unichain": "graph deploy --studio vector-unichain -l v0.0.2"
+    "deploy:unichain": "graph deploy --studio vector-unichain -l v0.0.3"
   },
   "devDependencies": {
     "@graphprotocol/graph-cli": "^0.72.0",

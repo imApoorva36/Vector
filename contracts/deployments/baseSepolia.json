@@ -1,9 +1,9 @@
 {
   "network": "baseSepolia",
   "chainId": 84532,
-  "VectorGovernance": "0x078Caca2c7580caA9a571368c9B21c722fc48e52",
-  "VectorRiskRegistry": "0x2478f2e45b9eF70EFb28f5fFFf4F695C14363B91",
-  "PolicyEngine": "0xda87f7DcBa74949f750D64C9D99E67aD8De4Ab6e",
-  "VectorHook": "0xB4012dBb91b1B1b9eB8609B6bfd57b377556933D",
-  "VectorReactiveCallback": "0x22f75f72Ab5e515182c579F904089e1De1F21cB1"
+  "VectorGovernance": "0xE3EB4D642d92f04E2797bAA91adFE13345D27Dd2",
+  "VectorRiskRegistry": "0x4cab8F4e0e1DF0dE30C112895C094F1C590d16e3",
+  "PolicyEngine": "0x2e68EDfae75BAC2eB2f7b53B2E8FA0d2afc3ae5b",
+  "VectorHook": "0xb0ffEE5a824E151e6f2Fd0E9D36C1F7a9a983844",
+  "VectorReactiveCallback": "0x56D4d13a5289dA908Bd84B759c21756A7A89Cd53"
 }

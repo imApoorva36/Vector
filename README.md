@@ -34,7 +34,7 @@ Most pool protection lives off-chain or in the UI. You rely on routing filters o
 
 ## Demo
 
-> **Demo video:** <!-- TODO: paste your demo video link here -->
+> **Demo video:** `TBD` (replace with final recording link before submission)
 
 ---
 
@@ -52,7 +52,7 @@ We asked: what if the **hook** enforced risk at execution time? Not a blacklist 
 
 - **Attestation-gated swaps** : Off-chain risk engine scores every swap; TEE (or dev signer) signs. Hook verifies signature and enforces ALLOW / WARN / BLOCK. No bypass.
 - **Hybrid policy** : Protected pools: fail-closed (no attestation = BLOCK). Unprotected: fail-open so the AMM stays permissionless. Pool operators choose.
-- **5-layer risk pipeline** : Allowlist, swap intent, threat intel (GoPlus), on-chain signals, bytecode. Scores 0–100; configurable block/warn thresholds per pool.
+- **5-layer risk pipeline** : Allowlist, swap intent, threat intel (known drainer/phishing/tornado patterns + GoPlus), on-chain signals (registry blacklist + freshness heuristics), bytecode. Scores 0–100; configurable block/warn thresholds per pool.
 - **Reactive + Unichain** : RSC monitors SwapBlocked; after 3 blocks per (actor, pool) triggers cross-chain callback. Deployed on Base Sepolia and Unichain Sepolia with chain selector in the UI.
 - **Dashboard + subgraph** : Operator dashboard (stats, evaluations, signer status, cross-chain alerts). The Graph indexes hook, registry, policy, and callback events.
 
@@ -199,21 +199,21 @@ flowchart TD
 
 | Contract | Address |
 |----------|---------|
-| VectorGovernance | [`0x078Caca2c7580caA9a571368c9B21c722fc48e52`](https://sepolia.basescan.org/address/0x078Caca2c7580caA9a571368c9B21c722fc48e52) |
-| VectorRiskRegistry | [`0x2478f2e45b9eF70EFb28f5fFFf4F695C14363B91`](https://sepolia.basescan.org/address/0x2478f2e45b9eF70EFb28f5fFFf4F695C14363B91) |
-| PolicyEngine | [`0xda87f7DcBa74949f750D64C9D99E67aD8De4Ab6e`](https://sepolia.basescan.org/address/0xda87f7DcBa74949f750D64C9D99E67aD8De4Ab6e) |
-| VectorHook | [`0xB4012dBb91b1B1b9eB8609B6bfd57b377556933D`](https://sepolia.basescan.org/address/0xB4012dBb91b1B1b9eB8609B6bfd57b377556933D) |
-| VectorReactiveCallback | [`0x22f75f72Ab5e515182c579F904089e1De1F21cB1`](https://sepolia.basescan.org/address/0x22f75f72Ab5e515182c579F904089e1De1F21cB1) |
+| VectorGovernance | [`0xE3EB4D642d92f04E2797bAA91adFE13345D27Dd2`](https://sepolia.basescan.org/address/0xE3EB4D642d92f04E2797bAA91adFE13345D27Dd2) |
+| VectorRiskRegistry | [`0x4cab8F4e0e1DF0dE30C112895C094F1C590d16e3`](https://sepolia.basescan.org/address/0x4cab8F4e0e1DF0dE30C112895C094F1C590d16e3) |
+| PolicyEngine | [`0x2e68EDfae75BAC2eB2f7b53B2E8FA0d2afc3ae5b`](https://sepolia.basescan.org/address/0x2e68EDfae75BAC2eB2f7b53B2E8FA0d2afc3ae5b) |
+| VectorHook | [`0xb0ffEE5a824E151e6f2Fd0E9D36C1F7a9a983844`](https://sepolia.basescan.org/address/0xb0ffEE5a824E151e6f2Fd0E9D36C1F7a9a983844) |
+| VectorReactiveCallback | [`0x56D4d13a5289dA908Bd84B759c21756A7A89Cd53`](https://sepolia.basescan.org/address/0x56D4d13a5289dA908Bd84B759c21756A7A89Cd53) |
 
 **Unichain Sepolia** (chainId 1301)
 
 | Contract | Address |
 |----------|---------|
-| VectorGovernance | `0xb371542bE9829175baD89855d4C86f50F11803C8` |
-| VectorRiskRegistry | `0x27142bFCa9Ac9B7FaE773d46656deBF4f4E39aAe` |
-| PolicyEngine | `0xa1Afa7158d8d47D66E00B6891ea54B35B0840cf4` |
-| VectorHook | `0x9fe666729cCe60645b4e9ec4672A7C9cCa9FE87f` |
-| VectorReactiveCallback | `0xdeE66A4e8aAf73e47634B96bb65D7011deb0073C` |
+| VectorGovernance | `0x40703409E02E2fdb9425609868A0896Dc22A14F2` |
+| VectorRiskRegistry | `0x9b61454a7e07191AD3F5f0dbA337EA3c5b4cB943` |
+| PolicyEngine | `0x81f8270304F96596D3723071B86765fF8fF0a2A7` |
+| VectorHook | `0xa2986B6F4Aff5fDE3A6ab056E249969c6aa8509b` |
+| VectorReactiveCallback | `0x195092d0611E2E23721e3B8227A82561780ED274` |
 
 ---
 
@@ -286,7 +286,11 @@ cd frontend
 npm install
 cp .env.example .env
 ```
-3. Fill in `TEE_SIGNER_KEY` (attestation signer private key), `RPC_URL`, contract addresses, `NEXT_PUBLIC_SUBGRAPH_URL`, and `NEXT_PUBLIC_WC_PROJECT_ID`. The 5-layer risk pipeline runs inside Next.js API routes — no separate server needed.
+3. Fill in `TEE_SIGNER_KEY` (attestation signer private key), `RPC_URL`, contract addresses, and `NEXT_PUBLIC_SUBGRAPH_URL`. The 5-layer risk pipeline runs inside Next.js API routes - no separate server needed.
+
+  Layer 4 blacklist checks are read directly from `VectorRiskRegistry.isBlacklisted(token)` on-chain.
+  Use registry owner methods `setTokenBlacklist` / `batchSetTokenBlacklist` to update blocked tokens.
+
 
 4. Start the dev server:
 ```bash
@@ -336,8 +340,8 @@ cd risk-engine && npm run test
 ## Tech Stack
 
 - **Contracts:** Solidity, Hardhat, OpenZeppelin, Uniswap v4 periphery (hook interfaces)
-- **Risk engine:** Node.js (embedded in Next.js API routes), 5-layer pipeline, EIP-191 attestation signer
-- **Frontend:** Next.js 15, TypeScript, Tailwind, wagmi, RainbowKit, TanStack Query
+- **Risk engine:** Node.js (embedded in Next.js API routes), 5-layer pipeline, on-chain registry blacklist checks, EIP-191 attestation signer
+- **Frontend:** Next.js 15, TypeScript, Tailwind, wagmi, RainbowKit, TanStack Query, wallet context + shared tx error mapping
 - **Indexing:** The Graph (subgraph for hook, registry, policy, Reactive callback events)
 - **Networks:** Base Sepolia, Unichain Sepolia
 

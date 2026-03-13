@@ -1,9 +1,9 @@
 {
   "network": "unichainSepolia",
   "chainId": 1301,
-  "VectorGovernance": "0xb371542bE9829175baD89855d4C86f50F11803C8",
-  "VectorRiskRegistry": "0x27142bFCa9Ac9B7FaE773d46656deBF4f4E39aAe",
-  "PolicyEngine": "0xa1Afa7158d8d47D66E00B6891ea54B35B0840cf4",
-  "VectorHook": "0x9fe666729cCe60645b4e9ec4672A7C9cCa9FE87f",
-  "VectorReactiveCallback": "0xdeE66A4e8aAf73e47634B96bb65D7011deb0073C"
+  "VectorGovernance": "0x40703409E02E2fdb9425609868A0896Dc22A14F2",
+  "VectorRiskRegistry": "0x9b61454a7e07191AD3F5f0dbA337EA3c5b4cB943",
+  "PolicyEngine": "0x81f8270304F96596D3723071B86765fF8fF0a2A7",
+  "VectorHook": "0xa2986B6F4Aff5fDE3A6ab056E249969c6aa8509b",
+  "VectorReactiveCallback": "0x195092d0611E2E23721e3B8227A82561780ED274"
 }

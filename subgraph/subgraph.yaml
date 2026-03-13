@@ -6,9 +6,9 @@ dataSources:
     name: VectorHook
     network: base-sepolia
     source:
-      address: "0xB4012dBb91b1B1b9eB8609B6bfd57b377556933D"
+      address: "0xb0ffEE5a824E151e6f2Fd0E9D36C1F7a9a983844"
       abi: VectorHook
-      startBlock: 38634500
+      startBlock: 38816000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -32,9 +32,9 @@ dataSources:
     name: PolicyEngine
     network: base-sepolia
     source:
-      address: "0xda87f7DcBa74949f750D64C9D99E67aD8De4Ab6e"
+      address: "0x2e68EDfae75BAC2eB2f7b53B2E8FA0d2afc3ae5b"
       abi: PolicyEngine
-      startBlock: 38634500
+      startBlock: 38816000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -58,9 +58,9 @@ dataSources:
     name: VectorRiskRegistry
     network: base-sepolia
     source:
-      address: "0x2478f2e45b9eF70EFb28f5fFFf4F695C14363B91"
+      address: "0x4cab8F4e0e1DF0dE30C112895C094F1C590d16e3"
       abi: VectorRiskRegistry
-      startBlock: 38634500
+      startBlock: 38816000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -83,9 +83,9 @@ dataSources:
     name: VectorReactiveCallback
     network: base-sepolia
     source:
-      address: "0x22f75f72Ab5e515182c579F904089e1De1F21cB1"
+      address: "0x56D4d13a5289dA908Bd84B759c21756A7A89Cd53"
       abi: VectorReactiveCallback
-      startBlock: 38634500
+      startBlock: 38816000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
