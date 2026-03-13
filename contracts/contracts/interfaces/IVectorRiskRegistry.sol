@@ -17,4 +17,10 @@ interface IVectorRiskRegistry {
     function getSigner() external view returns (address);
 
     function isTEEConfigured() external view returns (bool);
+
+    function isBlacklisted(address token) external view returns (bool);
+
+    function setTokenBlacklist(address token, bool blacklisted) external;
+
+    function batchSetTokenBlacklist(address[] calldata tokens, bool blacklisted) external;
 }

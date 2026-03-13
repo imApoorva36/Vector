@@ -11,7 +11,8 @@ import {
   Key,
   Zap,
 } from "lucide-react";
-import { SUBGRAPH_URL } from "@/lib/constants";
+import { CHAIN_IDS, getSubgraphUrl } from "@/lib/constants";
+import { useWallet } from "@/context/WalletContext";
 
 async function fetchDashboardData(subgraphUrl: string) {
   if (!subgraphUrl) return null;
@@ -88,11 +89,15 @@ function decisionBadge(decision: string) {
 }
 
 export function DashboardView() {
-  const subgraphUrl = SUBGRAPH_URL;
+  const { chainId } = useWallet();
+  const effectiveChainId = chainId ?? CHAIN_IDS.BASE_SEPOLIA;
+  const subgraphUrl = getSubgraphUrl(effectiveChainId);
+
   const { data, isLoading } = useQuery({
     queryKey: ["dashboard", subgraphUrl],
     queryFn: () => fetchDashboardData(subgraphUrl),
     refetchInterval: 10_000,
+    retry: 2,
     enabled: !!subgraphUrl,
   });
   const { data: health } = useQuery({

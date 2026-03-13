@@ -7,6 +7,7 @@
 
 const { assessSwapRisk } = require("./index");
 const { AttestationSigner } = require("./attestation/signer");
+const { getPoolOnChainSignals } = require("./layers/poolOnChainSignals");
 const { ethers } = require("ethers");
 
 let passed = 0;
@@ -136,7 +137,46 @@ async function runTests() {
     assert(recovered === testSigner.address, "Recovered signer matches");
   }
 
-  // ── Test 6: Caching ──
+  // ── Test 6: Known tornado cash token pattern ──
+  console.log("\nThreat intel known-pattern coverage");
+  {
+    const result = await assessSwapRisk({
+      poolId: "0x" + "aa".repeat(32),
+      token0: "0xd90e2f925da726b50c4ed8d0fb90ad053324f31b",
+      token1: "0x" + "bb".repeat(20),
+      zeroForOne: true,
+      amountSpecified: "1000",
+      sender: "0x" + "11".repeat(20),
+      chainId: 1,
+    });
+    assert(result.riskScore >= 70, "Known tornado-cash token pattern is high risk");
+    assert(result.decision === "BLOCK", "Known tornado-cash token decision is BLOCK");
+  }
+
+  // ── Test 7: On-chain fresh + prefunded heuristic ──
+  console.log("\nOn-chain heuristic coverage");
+  {
+    const provider = {
+      getCode: async () => "0x6080604052",
+      getTransactionCount: async () => 0,
+      getBalance: async () => ethers.parseEther("0.05"),
+    };
+
+    const result = await getPoolOnChainSignals({
+      token0: "0x" + "aa".repeat(20),
+      token1: "0x" + "bb".repeat(20),
+      targetToken: "0x" + "aa".repeat(20),
+      provider,
+      chainId: 84532,
+    });
+
+    assert(
+      result.signals.some((s) => s.reasonCode === "ONCHAIN_FRESH_PREFUNDED"),
+      "Fresh prefunded token contract signal emitted"
+    );
+  }
+
+  // ── Test 8: Caching ──
   console.log("\nCaching");
   {
     const params = {

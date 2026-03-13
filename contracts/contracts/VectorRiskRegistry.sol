@@ -21,11 +21,15 @@ contract VectorRiskRegistry is IVectorRiskRegistry, Ownable {
     address public teeSignerAddress;
     uint256 public riskThreshold; // default block above this (e.g. 70)
 
+    // ─── Token blacklist (on-chain source for risk layer) ───────────────────
+    mapping(address => bool) private tokenBlacklist;
+
     // ─── Events ─────────────────────────────────────────────────────────────
     event PoolProtectionSet(bytes32 indexed poolId, uint8 mode, uint256 blockThreshold, uint256 warnThreshold);
     event PoolProtectionRemoved(bytes32 indexed poolId);
     event SignerUpdated(address indexed previousSigner, address indexed newSigner);
     event RiskThresholdUpdated(uint256 oldThreshold, uint256 newThreshold);
+    event TokenBlacklistUpdated(address indexed token, bool blacklisted);
 
     // ─── Errors ─────────────────────────────────────────────────────────────
     error TEENotConfigured();
@@ -105,6 +109,11 @@ contract VectorRiskRegistry is IVectorRiskRegistry, Ownable {
         return teeSignerAddress != address(0);
     }
 
+    /// @inheritdoc IVectorRiskRegistry
+    function isBlacklisted(address token) external view returns (bool) {
+        return tokenBlacklist[token];
+    }
+
     // ─── Admin ──────────────────────────────────────────────────────────────
     function setTEESigner(address signer) external onlyOwner {
         address old = teeSignerAddress;
@@ -117,6 +126,23 @@ contract VectorRiskRegistry is IVectorRiskRegistry, Ownable {
         uint256 old = riskThreshold;
         riskThreshold = threshold;
         emit RiskThresholdUpdated(old, threshold);
+    }
+
+    /// @inheritdoc IVectorRiskRegistry
+    function setTokenBlacklist(address token, bool blacklisted) external onlyOwner {
+        require(token != address(0), "Invalid token");
+        tokenBlacklist[token] = blacklisted;
+        emit TokenBlacklistUpdated(token, blacklisted);
+    }
+
+    /// @inheritdoc IVectorRiskRegistry
+    function batchSetTokenBlacklist(address[] calldata tokens, bool blacklisted) external onlyOwner {
+        for (uint256 i = 0; i < tokens.length; i++) {
+            address token = tokens[i];
+            if (token == address(0)) continue;
+            tokenBlacklist[token] = blacklisted;
+            emit TokenBlacklistUpdated(token, blacklisted);
+        }
     }
 
     function setPoolProtection(

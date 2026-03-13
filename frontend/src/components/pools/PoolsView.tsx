@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useAccount, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { Shield, Plus, Trash2 } from "lucide-react";
 import { getContracts } from "@/lib/constants";
+import { useWallet } from "@/context/WalletContext";
+import { mapTxError } from "@/hooks/useTransaction";
 
 // ABI fragments for VectorRiskRegistry
 const REGISTRY_ABI = [
@@ -29,7 +31,7 @@ const REGISTRY_ABI = [
 ] as const;
 
 export function PoolsView() {
-  const { isConnected, chainId } = useAccount();
+  const { isConnected, chainId } = useWallet();
   const REGISTRY_ADDRESS = (chainId != null ? getContracts(chainId) : getContracts(84532)).RISK_REGISTRY;
   const [poolId, setPoolId] = useState("");
   const [blockThreshold, setBlockThreshold] = useState("70");
@@ -171,7 +173,7 @@ export function PoolsView() {
           {writeError && (
             <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-400 break-all">
               <span className="font-semibold">Transaction failed: </span>
-              {writeError.message}
+              {mapTxError(writeError)}
             </div>
           )}
 

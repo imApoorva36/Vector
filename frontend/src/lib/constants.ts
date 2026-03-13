@@ -37,6 +37,45 @@ export const CHAIN_IDS = {
   LOCALHARDHAT: 31337,
 } as const;
 
+export type SupportedChainId =
+  | typeof CHAIN_IDS.BASE_SEPOLIA
+  | typeof CHAIN_IDS.UNICHAIN_SEPOLIA;
+
+export const CHAIN_METADATA: Record<SupportedChainId, {
+  id: SupportedChainId;
+  name: string;
+  currency: string;
+  rpcUrl: string;
+  explorerUrl: string;
+}> = {
+  [CHAIN_IDS.BASE_SEPOLIA]: {
+    id: CHAIN_IDS.BASE_SEPOLIA,
+    name: "Base Sepolia",
+    currency: "ETH",
+    rpcUrl: "https://sepolia.base.org",
+    explorerUrl: "https://sepolia.basescan.org",
+  },
+  [CHAIN_IDS.UNICHAIN_SEPOLIA]: {
+    id: CHAIN_IDS.UNICHAIN_SEPOLIA,
+    name: "Unichain Sepolia",
+    currency: "ETH",
+    rpcUrl: "https://sepolia.unichain.org",
+    explorerUrl: "https://sepolia.uniscan.xyz",
+  },
+};
+
+export function getChainName(chainId: number | undefined | null): string | null {
+  if (!chainId) return null;
+  const meta = CHAIN_METADATA[chainId as SupportedChainId];
+  return meta?.name ?? `Chain ${chainId}`;
+}
+
+export function getTxExplorerUrl(txHash: string, chainId: number | undefined | null): string | null {
+  if (!txHash || !chainId) return null;
+  const base = CHAIN_METADATA[chainId as SupportedChainId]?.explorerUrl;
+  return base ? `${base}/tx/${txHash}` : null;
+}
+
 export function getChainProfile(chainId: number) {
   const defaults = { blockThreshold: 70, warnThreshold: 31, attestationTTLSeconds: 300 };
   const profiles: Record<number, typeof defaults> = {

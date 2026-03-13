@@ -44,6 +44,19 @@ describe("Vector", function () {
       expect(blockThresh).to.equal(70);
       expect(warnThresh).to.equal(31);
     });
+
+    it("supports owner-managed on-chain token blacklist", async function () {
+      const token = "0x000000000000000000000000000000000000dEaD";
+
+      expect(await registry.isBlacklisted(token)).to.equal(false);
+      await expect(registry.setTokenBlacklist(token, true))
+        .to.emit(registry, "TokenBlacklistUpdated")
+        .withArgs(token, true);
+      expect(await registry.isBlacklisted(token)).to.equal(true);
+
+      await registry.batchSetTokenBlacklist([token], false);
+      expect(await registry.isBlacklisted(token)).to.equal(false);
+    });
   });
 
   describe("PolicyEngine", function () {

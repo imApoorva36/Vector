@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { Zap, ShieldCheck, ShieldAlert, ShieldX, Loader2, ExternalLink } from "lucide-react";
-import { useAccount, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
-import { SUPPORTED_CHAINS, getContracts } from "@/lib/constants";
+import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { SUPPORTED_CHAINS, getContracts, getTxExplorerUrl } from "@/lib/constants";
+import { useWallet } from "@/context/WalletContext";
+import { mapTxError } from "@/hooks/useTransaction";
 
 const HOOK_ABI = [
   {
@@ -20,11 +22,6 @@ const HOOK_ABI = [
     outputs: [{ name: "decision", type: "uint8" }],
   },
 ] as const;
-
-const BLOCK_EXPLORERS: Record<number, string> = {
-  84532: "https://sepolia.basescan.org/tx/",
-  1301:  "https://unichain-sepolia.blockscout.com/tx/",
-};
 
 const DEMO_POOL_ID = "0x0000000000000000000000000000000000000000000000000000000000000001";
 const DEMO_SENDER  = "0x0000000000000000000000000000000000000001";
@@ -98,7 +95,7 @@ function decisionConfig(decision: string) {
 }
 
 export function SimulateView() {
-  const { isConnected, chainId: walletChainId } = useAccount();
+  const { isConnected, chainId: walletChainId } = useWallet();
   const [poolId, setPoolId] = useState("");
   const [tokenIn, setTokenIn] = useState("");
   const [tokenOut, setTokenOut] = useState("");
@@ -121,7 +118,7 @@ export function SimulateView() {
   const { isLoading: evalConfirming, isSuccess: evalSuccess } =
     useWaitForTransactionReceipt({ hash: evalTxHash });
 
-  const explorerBase = BLOCK_EXPLORERS[walletChainId ?? chainId] ?? "";
+  const explorerUrl = evalTxHash ? getTxExplorerUrl(evalTxHash, walletChainId ?? chainId) : null;
 
   function handleEvaluateOnChain() {
     if (!result?.attestation?.encodedAttestation || !HOOK_ADDRESS) return;
@@ -383,7 +380,7 @@ export function SimulateView() {
 
                 {evalError && (
                   <p className="mt-2 text-xs text-red-400 break-all">
-                    {evalError.message}
+                    {mapTxError(evalError)}
                   </p>
                 )}
 
@@ -391,9 +388,9 @@ export function SimulateView() {
                   <div className="mt-2 text-xs text-emerald-400 space-y-0.5">
                     <p className="font-semibold">Confirmed! Dashboard will update in ~30s.</p>
                     <p className="font-mono break-all text-emerald-500/70">{evalTxHash}</p>
-                    {explorerBase && (
+                    {explorerUrl && (
                       <a
-                        href={`${explorerBase}${evalTxHash}`}
+                        href={explorerUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 text-emerald-400 underline"
