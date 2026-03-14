@@ -30,33 +30,9 @@ export function handlePolicySwapEvaluated(event: SwapEvaluated): void {
 }
 
 export function handlePolicySwapBlocked(event: SwapBlocked): void {
-  let poolId = event.params.poolId.toHexString();
-  let evalId = event.transaction.hash.toHexString() + "-policy-blocked-" + event.logIndex.toString();
-
-  let evaluation = new SwapEvaluation(evalId);
-  evaluation.pool = poolId;
-  evaluation.sender = event.params.sender;
-  evaluation.decision = "BLOCK";
-  evaluation.riskScore = event.params.riskScore.toI32();
-  evaluation.reason = event.params.reason;
-  evaluation.blockNumber = event.block.number;
-  evaluation.timestamp = event.block.timestamp;
-  evaluation.transactionHash = event.transaction.hash;
-  evaluation.save();
+  // Handled by VectorHook handler (handleSwapBlocked); skip to avoid duplicate SwapEvaluation entities
 }
 
 export function handlePolicySwapWarned(event: SwapWarned): void {
-  let poolId = event.params.poolId.toHexString();
-  let evalId = event.transaction.hash.toHexString() + "-policy-warned-" + event.logIndex.toString();
-
-  let evaluation = new SwapEvaluation(evalId);
-  evaluation.pool = poolId;
-  evaluation.sender = event.params.sender;
-  evaluation.decision = "WARN";
-  evaluation.riskScore = event.params.riskScore.toI32();
-  evaluation.reason = event.params.reason;
-  evaluation.blockNumber = event.block.number;
-  evaluation.timestamp = event.block.timestamp;
-  evaluation.transactionHash = event.transaction.hash;
-  evaluation.save();
+  // Handled by VectorHook handler (handleSwapEvaluated); skip to avoid duplicate SwapEvaluation entities
 }
