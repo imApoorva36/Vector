@@ -21,6 +21,9 @@ const KNOWN_MALICIOUS_PATTERNS = {
     "0xbadc0debadc0debadc0debadc0debadc0deba000",
     "0xdef1c0ded9bec7f1a1670819833240f027b25eff",
   ],
+  warnTokens: [
+    "0x742d35cc6634c0532925a3b8d4c82b5e97c50b8d",
+  ],
   tornadoCash: [
     "0xd90e2f925da726b50c4ed8d0fb90ad053324f31b",
     "0x722122df12d4e14e13ac3b6895a86e84145b6967",
@@ -37,6 +40,7 @@ const CATEGORY_REASON_CODE = {
   drainers: ReasonCodes.THREAT_KNOWN_DRAINER,
   phishing: ReasonCodes.THREAT_KNOWN_PHISHING,
   tornadoCash: ReasonCodes.THREAT_TORNADO,
+  warnTokens: ReasonCodes.THREAT_TAX,
 };
 
 function checkKnownMaliciousTokens(tokenAddress) {
@@ -44,12 +48,21 @@ function checkKnownMaliciousTokens(tokenAddress) {
   const addr = (tokenAddress || "").toLowerCase();
   for (const [category, list] of Object.entries(KNOWN_MALICIOUS_PATTERNS)) {
     if (list.includes(addr)) {
-      signals.push({
-        type: "THREAT_INTEL",
-        reasonCode: CATEGORY_REASON_CODE[category] || ReasonCodes.THREAT_MALICIOUS,
-        reason: `Known ${category} token`,
-        score: 95,
-      });
+      if (category === "warnTokens") {
+        signals.push({
+          type: "THREAT_INTEL",
+          reasonCode: CATEGORY_REASON_CODE[category],
+          reason: "Unknown or highly taxed token",
+          score: 40,
+        });
+      } else {
+        signals.push({
+          type: "THREAT_INTEL",
+          reasonCode: CATEGORY_REASON_CODE[category] || ReasonCodes.THREAT_MALICIOUS,
+          reason: `Known ${category} token`,
+          score: 95,
+        });
+      }
       break;
     }
   }

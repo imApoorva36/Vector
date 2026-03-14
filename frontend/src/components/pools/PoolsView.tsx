@@ -52,7 +52,7 @@ export function PoolsView() {
     const hex = raw.startsWith("0x") ? raw.slice(2) : raw;
     if (!hex) return "Enter a pool ID.";
     if (!/^[0-9a-fA-F]+$/.test(hex)) return "Invalid hex characters.";
-    if (hex.length > 64) return "Too long — max 32 bytes (64 hex chars).";
+    if (hex.length > 64) return "Too long - max 32 bytes (64 hex chars).";
     return null;
   }
 

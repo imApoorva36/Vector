@@ -108,9 +108,9 @@ function ScoreBar({ score, barColor }: { score: number; barColor: string }) {
         />
       </div>
       <div className="mt-1 flex justify-between text-[10px] text-slate-600">
-        <span>0 — Safe</span>
-        <span>31 — Warn</span>
-        <span>70 — Block</span>
+        <span>0 - Safe</span>
+        <span>31 - Warn</span>
+        <span>70 - Block</span>
         <span>100</span>
       </div>
     </div>
@@ -212,7 +212,7 @@ export function SimulateView() {
       <h1 className="mb-2 text-3xl font-bold">Swap Risk Simulator</h1>
       <p className="mb-6 text-slate-400">
         Test any swap against Vector&apos;s 5-layer risk pipeline. See the risk score, layer breakdown,
-        and signed attestation — then optionally evaluate it on-chain through the hook.
+        and signed attestation - then optionally evaluate it on-chain through the hook.
       </p>
 
       {/* Quick fill scenario buttons */}
@@ -387,7 +387,7 @@ export function SimulateView() {
               <div className="mt-4 rounded-lg border border-vector-border bg-vector-dark/30 p-4">
                 <p className="mb-2 text-xs text-slate-400">
                   <span className="font-semibold text-slate-300">Evaluate On-chain</span>
-                  {" "}— sends this attestation to VectorHook on-chain, emitting a{" "}
+                  {" "}- sends this attestation to VectorHook on-chain, emitting a{" "}
                   <code className="text-slate-400">HookSwapEvaluated</code> event that populates the Dashboard.
                   {!isConnected && <span className="ml-1 text-amber-400"> (connect wallet first)</span>}
                 </p>
@@ -431,7 +431,7 @@ export function SimulateView() {
 
             {result.decision === "BLOCK" && (
               <p className="mt-4 text-xs text-slate-500 italic">
-                BLOCK decisions revert on-chain — no on-chain evaluation submitted for this scenario.
+                BLOCK decisions revert on-chain - no on-chain evaluation submitted for this scenario.
               </p>
             )}
           </div>
