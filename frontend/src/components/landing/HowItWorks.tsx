@@ -29,13 +29,19 @@ const steps = [
 
 export function HowItWorks() {
   return (
-    <section className="mx-auto max-w-5xl px-4 py-20">
-      <h2 className="mb-12 text-center text-3xl font-bold">How It Works</h2>
-      <div className="grid gap-8 sm:grid-cols-2">
+    <section className="mx-auto max-w-6xl px-4 py-24">
+      <div className="mb-12 text-center">
+        <h2 className="mb-4 text-3xl font-bold">Engineered for Security</h2>
+        <p className="mx-auto max-w-2xl text-slate-400">
+          The Vector architecture combines off-chain intelligence with hard on-chain enforcement.
+        </p>
+      </div>
+
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {steps.map((step) => (
           <div
             key={step.title}
-            className="rounded-xl border border-vector-border bg-vector-card p-6 transition hover:border-vector-primary/40"
+            className="rounded-xl border border-vector-border bg-vector-card p-6 transition hover:border-vector-border/80"
           >
             <div className="mb-4 inline-flex rounded-lg bg-vector-primary/10 p-3 text-vector-primary">
               {step.icon}

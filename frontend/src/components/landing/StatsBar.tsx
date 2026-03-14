@@ -39,10 +39,12 @@ function StatCard({
 }) {
   return (
     <div className="flex items-center gap-4 rounded-xl border border-vector-border bg-vector-card p-5">
-      <div className={`rounded-lg p-2 ${color}`}>{icon}</div>
+      <div className={`rounded-lg p-2.5 ${color}`}>
+        {icon}
+      </div>
       <div>
-        <p className="text-2xl font-bold">{value}</p>
-        <p className="text-sm text-slate-400">{label}</p>
+        <p className="text-2xl font-bold text-white">{value}</p>
+        <p className="text-sm font-medium text-slate-400">{label}</p>
       </div>
     </div>
   );
@@ -62,25 +64,25 @@ export function StatsBar() {
       icon: <Activity className="h-5 w-5 text-vector-accent" />,
       label: "Total Evaluations",
       value: data?.totalSwapEvaluations?.toString() || "-",
-      color: "bg-vector-accent/10",
+      color: "bg-vector-accent/10 border border-vector-accent/20",
     },
     {
-      icon: <ShieldCheck className="h-5 w-5 text-vector-success" />,
+      icon: <ShieldCheck className="h-5 w-5 text-emerald-400" />,
       label: "Protected Pools",
       value: data?.totalPools?.toString() || "-",
-      color: "bg-vector-success/10",
+      color: "bg-emerald-500/10 border border-emerald-500/20",
     },
     {
-      icon: <ShieldX className="h-5 w-5 text-vector-danger" />,
+      icon: <ShieldX className="h-5 w-5 text-red-400" />,
       label: "Blocked Swaps",
       value: data?.totalBlockedSwaps?.toString() || "-",
-      color: "bg-vector-danger/10",
+      color: "bg-red-500/10 border border-red-500/20",
     },
     {
-      icon: <ShieldAlert className="h-5 w-5 text-vector-warning" />,
+      icon: <ShieldAlert className="h-5 w-5 text-amber-400" />,
       label: "Warned Swaps",
       value: data?.totalWarnedSwaps?.toString() || "-",
-      color: "bg-vector-warning/10",
+      color: "bg-amber-500/10 border border-amber-500/20",
     },
   ];
 

@@ -112,12 +112,17 @@ export function DashboardView() {
   const poolsByBlocked = data?.poolsByBlocked || [];
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10">
-      <h1 className="mb-8 text-3xl font-bold">Operator Dashboard</h1>
+    <div className="mx-auto max-w-7xl px-4 py-12">
+      <div className="mb-10 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+        <div>
+          <h1 className="mb-2 text-4xl font-extrabold tracking-tight text-white">Operator Dashboard</h1>
+          <p className="text-lg text-slate-400">Live protocol statistics and recent evaluations.</p>
+        </div>
+      </div>
 
       {/* Signer & sponsor status */}
-      <div className="mb-8 grid gap-4 sm:grid-cols-2">
-        <div className="rounded-xl border border-vector-border bg-vector-card p-4">
+      <div className="mb-10 grid gap-6 sm:grid-cols-2">
+        <div className="rounded-xl border border-vector-border bg-vector-card p-6">
           <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-300">
             <Key className="h-4 w-4" />
             TEE Signer Status
@@ -141,9 +146,9 @@ export function DashboardView() {
             <p className="text-sm text-slate-500">Risk engine unreachable</p>
           )}
         </div>
-        <div className="rounded-xl border border-vector-border bg-vector-card p-4">
-          <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-300">
-            <Zap className="h-4 w-4" />
+        <div className="rounded-xl border border-vector-border bg-vector-card p-6">
+          <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-300">
+            <Zap className="h-4 w-4 text-cyan-400" />
             Reactive Network
           </h3>
           <div className="space-y-1 text-sm">
@@ -160,15 +165,17 @@ export function DashboardView() {
       {/* Stats cards */}
       <div className="mb-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         {[
-          { icon: <Activity className="h-5 w-5 text-vector-accent" />, label: "Evaluations", value: stats?.totalSwapEvaluations || "-" },
+          { icon: <Activity className="h-5 w-5 text-cyan-400" />, label: "Evaluations", value: stats?.totalSwapEvaluations || "-" },
           { icon: <ShieldCheck className="h-5 w-5 text-emerald-400" />, label: "Protected Pools", value: stats?.totalPools || "-" },
-          { icon: <ShieldX className="h-5 w-5 text-red-400" />, label: "Blocked", value: stats?.totalBlockedSwaps || "-" },
+          { icon: <ShieldX className="h-5 w-5 text-rose-400" />, label: "Blocked", value: stats?.totalBlockedSwaps || "-" },
           { icon: <ShieldAlert className="h-5 w-5 text-amber-400" />, label: "Warned", value: stats?.totalWarnedSwaps || "-" },
           { icon: <TrendingUp className="h-5 w-5 text-violet-400" />, label: "X-Chain Alerts", value: stats?.totalCrossChainAlerts || "-" },
-        ].map((s) => (
-          <div key={s.label} className="rounded-xl border border-vector-border bg-vector-card p-4">
+        ].map((s, i) => (
+          <div key={i} className="rounded-xl border border-vector-border bg-vector-card p-5 transition hover:border-vector-border/80">
             <div className="flex items-center gap-3">
-              {s.icon}
+              <div className="rounded-lg bg-vector-dark p-2">
+                {s.icon}
+              </div>
               <div>
                 <p className="text-xl font-bold">{s.value}</p>
                 <p className="text-xs text-slate-400">{s.label}</p>
@@ -180,11 +187,16 @@ export function DashboardView() {
 
       <div className="grid gap-8 lg:grid-cols-2">
         {/* Recent evaluations */}
-        <div className="rounded-xl border border-vector-border bg-vector-card p-6">
-          <h2 className="mb-4 text-lg font-semibold">Recent Evaluations</h2>
-          {isLoading ? (
-            <p className="text-sm text-slate-500">Loading...</p>
-          ) : evals.length === 0 ? (
+        <div className="flex flex-col rounded-xl border border-vector-border bg-vector-card">
+          <div className="border-b border-vector-border px-6 py-5">
+            <h2 className="text-lg font-semibold text-slate-200">Recent Evaluations</h2>
+          </div>
+          <div className="p-6">
+            {isLoading ? (
+              <div className="flex justify-center p-8">
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-vector-primary border-t-transparent" />
+              </div>
+            ) : evals.length === 0 ? (
             <p className="text-sm text-slate-500">
               No swap evaluations yet. Connect a subgraph to see live data.
             </p>
@@ -193,15 +205,19 @@ export function DashboardView() {
               {evals.map((ev: any) => (
                 <div
                   key={ev.id}
-                  className="flex items-center justify-between rounded-lg bg-vector-dark/50 px-4 py-3"
+                  className="flex items-center justify-between rounded-lg bg-vector-dark px-4 py-3 border border-vector-border/50"
                 >
                   <div>
-                    <p className="text-sm font-mono text-slate-300">
-                      {ev.sender.slice(0, 6)}...{ev.sender.slice(-4)}
-                    </p>
-                    <p className="text-xs text-slate-500">
-                      Score: {ev.riskScore} &middot; Pool:{" "}
-                      {ev.pool?.id?.slice(0, 10)}...
+                    <div className="mb-1 flex items-center gap-2">
+                      <p className="font-mono text-sm text-slate-300">
+                        {ev.sender.slice(0, 6)}...{ev.sender.slice(-4)}
+                      </p>
+                      <span className="rounded bg-white/5 px-1.5 py-0.5 text-[10px] text-slate-400">
+                        Score: {ev.riskScore}
+                      </span>
+                    </div>
+                    <p className="font-mono text-[10px] tracking-wider text-slate-500 uppercase">
+                      Pool: {ev.pool?.id?.slice(0, 10)}...
                     </p>
                   </div>
                   {decisionBadge(ev.decision)}
@@ -209,6 +225,7 @@ export function DashboardView() {
               ))}
             </div>
           )}
+          </div>
         </div>
 
         {/* Trend: pools by blocked count */}
@@ -231,8 +248,18 @@ export function DashboardView() {
         )}
 
         {/* Cross-chain alerts */}
-        <div className="rounded-xl border border-vector-border bg-vector-card p-6">
-          <h2 className="mb-4 text-lg font-semibold">Cross-Chain Alerts</h2>
+        <div className="flex flex-col rounded-xl border border-vector-border bg-vector-card">
+          <div className="border-b border-vector-border px-6 py-5 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-slate-200">Cross-Chain Alerts</h2>
+            <div className="flex items-center gap-1.5 rounded-md bg-vector-dark px-2 py-1 text-xs text-violet-400">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-violet-400 opacity-75"></span>
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-violet-500"></span>
+              </span>
+              Live
+            </div>
+          </div>
+          <div className="p-6">
           {alerts.length === 0 ? (
             <p className="text-sm text-slate-500">
               No cross-chain alerts yet. Reactive RSC monitors blocked events.
@@ -242,23 +269,29 @@ export function DashboardView() {
               {alerts.map((a: any) => (
                 <div
                   key={a.id}
-                  className="rounded-lg border border-red-500/20 bg-red-500/5 px-4 py-3"
+                  className="flex flex-col rounded-lg border border-rose-500/20 bg-rose-500/5 px-4 py-3"
                 >
                   <div className="flex items-center justify-between">
-                    <p className="text-sm font-mono text-red-300">
+                    <p className="font-mono text-sm font-medium text-rose-300">
                       {a.actor.slice(0, 6)}...{a.actor.slice(-4)}
                     </p>
-                    <span className="text-xs text-red-400">
+                    <span className="text-xs text-rose-400">
                       Chain {a.sourceChainId}
                     </span>
                   </div>
-                  <p className="mt-1 text-xs text-slate-400">
-                    Risk: {a.riskScore} - {a.reason}
-                  </p>
+                  <div className="mt-2 flex items-center gap-2">
+                    <span className="rounded bg-rose-500/10 px-1.5 py-0.5 font-mono text-[10px] text-rose-400">
+                      Score: {a.riskScore}
+                    </span>
+                    <p className="text-xs text-slate-400 truncate">
+                      {a.reason}
+                    </p>
+                  </div>
                 </div>
               ))}
             </div>
           )}
+          </div>
         </div>
       </div>
     </div>

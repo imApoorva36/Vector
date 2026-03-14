@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Zap, ShieldCheck, ShieldAlert, ShieldX, Loader2, ExternalLink } from "lucide-react";
+import { Zap, ShieldCheck, ShieldAlert, ShieldX, Loader2, ExternalLink, ArrowRight } from "lucide-react";
 import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { SUPPORTED_CHAINS, getContracts, getTxExplorerUrl } from "@/lib/constants";
 import { useWallet } from "@/context/WalletContext";
@@ -88,10 +88,33 @@ interface RiskResult {
 
 function decisionConfig(decision: string) {
   if (decision === "ALLOW")
-    return { icon: <ShieldCheck className="h-8 w-8" />, color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/30" };
+    return { icon: <ShieldCheck className="h-8 w-8" />, color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/30", barColor: "bg-emerald-500", label: "Safe to proceed" };
   if (decision === "WARN")
-    return { icon: <ShieldAlert className="h-8 w-8" />, color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/30" };
-  return { icon: <ShieldX className="h-8 w-8" />, color: "text-red-400", bg: "bg-red-500/10", border: "border-red-500/30" };
+    return { icon: <ShieldAlert className="h-8 w-8" />, color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/30", barColor: "bg-amber-500", label: "Proceed with caution" };
+  return { icon: <ShieldX className="h-8 w-8" />, color: "text-red-400", bg: "bg-red-500/10", border: "border-red-500/30", barColor: "bg-red-500", label: "Hook would revert this swap" };
+}
+
+function ScoreBar({ score, barColor }: { score: number; barColor: string }) {
+  return (
+    <div className="mt-4">
+      <div className="mb-1 flex items-center justify-between text-xs">
+        <span className="text-slate-500">Risk Score</span>
+        <span className="font-mono font-bold text-slate-300">{score}<span className="text-slate-500">/100</span></span>
+      </div>
+      <div className="h-2.5 w-full overflow-hidden rounded-full bg-vector-dark">
+        <div
+          className={`h-full rounded-full ${barColor} transition-all duration-700 ease-out`}
+          style={{ width: `${Math.max(score, 2)}%` }}
+        />
+      </div>
+      <div className="mt-1 flex justify-between text-[10px] text-slate-600">
+        <span>0 — Safe</span>
+        <span>31 — Warn</span>
+        <span>70 — Block</span>
+        <span>100</span>
+      </div>
+    </div>
+  );
 }
 
 export function SimulateView() {
@@ -188,22 +211,23 @@ export function SimulateView() {
     <div className="mx-auto max-w-3xl px-4 py-10">
       <h1 className="mb-2 text-3xl font-bold">Swap Risk Simulator</h1>
       <p className="mb-6 text-slate-400">
-        Simulate a swap against the risk engine to preview the attestation and
-        enforcement decision before executing on-chain.
+        Test any swap against Vector&apos;s 5-layer risk pipeline. See the risk score, layer breakdown,
+        and signed attestation — then optionally evaluate it on-chain through the hook.
       </p>
 
       {/* Quick fill scenario buttons */}
       <div className="mb-6">
-        <p className="mb-2 text-xs font-medium uppercase tracking-wider text-slate-500">Quick Fill</p>
+        <p className="mb-2 text-xs font-medium uppercase tracking-wider text-slate-500">Quick Fill Scenarios</p>
         <div className="flex flex-wrap gap-2">
           {QUICK_FILLS.map((fill) => (
             <button
               key={fill.label}
               onClick={() => applyQuickFill(fill)}
-              className={`rounded-lg border px-4 py-2 text-sm font-semibold transition ${fill.color}`}
+              className={`group flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-semibold transition ${fill.color}`}
             >
               {fill.label}
-              <span className="ml-1.5 font-normal text-slate-500">— {fill.subtitle}</span>
+              <ArrowRight className="h-3 w-3 opacity-0 transition group-hover:opacity-100" />
+              <span className="font-normal text-slate-500">{fill.subtitle}</span>
             </button>
           ))}
         </div>
@@ -303,10 +327,12 @@ export function SimulateView() {
                   {result.decision}
                 </p>
                 <p className="text-sm text-slate-400">
-                  Risk Score: {result.riskScore}/100
+                  {dc.label}
                 </p>
               </div>
             </div>
+
+            <ScoreBar score={result.riskScore} barColor={dc.barColor} />
 
             {/* Score breakdown */}
             <div className="mt-6 space-y-2">

@@ -85,47 +85,60 @@ export function PoolsView() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10">
-      <h1 className="mb-2 text-3xl font-bold">Pool Management</h1>
-      <p className="mb-8 text-slate-400">
-        Onboard pools for Vector protection. Set risk thresholds (block / warn).
-      </p>
+    <div className="mx-auto max-w-3xl px-4 py-12">
+      <div className="mb-10">
+        <h1 className="mb-3 text-4xl font-extrabold tracking-tight text-white">Pool Management</h1>
+        <p className="text-lg text-slate-400">
+          Onboard Uniswap v4 pools for Vector protection. Set custom risk thresholds below.
+        </p>
+      </div>
 
       {!isConnected ? (
-        <div className="rounded-xl border border-vector-border bg-vector-card p-8 text-center">
-          <Shield className="mx-auto mb-4 h-12 w-12 text-slate-500" />
-          <p className="text-slate-400">Connect your wallet to manage pools.</p>
+        <div className="flex flex-col items-center justify-center rounded-xl border border-vector-border bg-vector-card p-12 text-center">
+          <div className="mb-5 rounded-full bg-vector-dark p-4">
+            <Shield className="h-8 w-8 text-slate-500" />
+          </div>
+          <h2 className="mb-2 text-xl font-bold">Wallet Required</h2>
+          <p className="text-slate-400">Please connect your wallet to manage protected pools on-chain.</p>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-8">
+          {/* Main Pool Input Card */}
           <div className="rounded-xl border border-vector-border bg-vector-card p-6">
-            <label className="mb-1 block text-sm font-medium text-slate-300">
+            <label className="mb-2 block text-sm font-semibold tracking-wide text-slate-300">
               Pool ID (bytes32)
             </label>
-            <input
-              type="text"
-              value={poolId}
-              onChange={(e) => setPoolId(e.target.value)}
-              placeholder="0x..."
-              className={`w-full rounded-lg border px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none bg-vector-dark ${
-                poolIdError ? "border-red-500/60 focus:border-red-500" : "border-vector-border focus:border-vector-primary"
-              }`}
-            />
+            <div className="relative">
+              <input
+                type="text"
+                value={poolId}
+                onChange={(e) => setPoolId(e.target.value)}
+                placeholder="0x..."
+                className={`w-full rounded-lg border bg-vector-dark px-4 py-3 font-mono text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:border-transparent transition-all ${
+                  poolIdError 
+                    ? "border-red-500/50 focus:ring-red-500" 
+                    : "border-vector-border focus:ring-vector-primary"
+                }`}
+              />
+            </div>
             {poolIdError && (
-              <p className="mt-1.5 text-xs text-red-400">{poolIdError}</p>
+              <p className="mt-2 text-sm text-red-400 font-medium">{poolIdError}</p>
             )}
             {padded && padded !== poolId && (
-              <p className="mt-1.5 font-mono text-xs text-slate-500 break-all">
-                stored as: <span className="text-slate-400">{padded}</span>
-                <span className="ml-2 text-slate-600">(copy this for Simulate tab)</span>
-              </p>
+              <div className="mt-3 rounded-lg bg-slate-900/50 p-3 ring-1 ring-white/5">
+                <p className="font-mono text-xs text-slate-400 break-all leading-relaxed">
+                  <span className="font-semibold text-slate-500 mr-2 text-[10px] uppercase tracking-widest">PADDED:</span>
+                  <span className="text-slate-300">{padded}</span>
+                </p>
+              </div>
             )}
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div className="rounded-xl border border-vector-border bg-vector-card p-4">
-              <label className="mb-1 block text-xs font-medium text-slate-400">
-                Block Threshold (0-100)
+          <div className="grid gap-6 sm:grid-cols-2">
+            <div className="rounded-xl border border-vector-border bg-vector-card p-6">
+              <label className="mb-3 block text-sm font-semibold tracking-wide text-slate-300 flex items-center justify-between">
+                <span>Block Threshold</span>
+                <span className="rounded bg-red-500/10 px-2 py-0.5 text-[10px] font-bold text-red-500 uppercase tracking-widest">Revert</span>
               </label>
               <input
                 type="number"
@@ -133,12 +146,14 @@ export function PoolsView() {
                 max="100"
                 value={blockThreshold}
                 onChange={(e) => setBlockThreshold(e.target.value)}
-                className="w-full rounded-lg border border-vector-border bg-vector-dark px-3 py-2 text-sm text-white focus:border-vector-primary focus:outline-none"
+                className="w-full rounded-lg border border-vector-border bg-vector-dark px-4 py-3 font-mono text-lg text-white focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-transparent transition-all"
               />
+              <p className="mt-3 text-xs text-slate-500">Scores ≥ this value are blocked on-chain.</p>
             </div>
-            <div className="rounded-xl border border-vector-border bg-vector-card p-4">
-              <label className="mb-1 block text-xs font-medium text-slate-400">
-                Warn Threshold (0-100)
+            <div className="rounded-xl border border-vector-border bg-vector-card p-6">
+              <label className="mb-3 block text-sm font-semibold tracking-wide text-slate-300 flex items-center justify-between">
+                <span>Warn Threshold</span>
+                <span className="rounded bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-500 uppercase tracking-widest">Alert</span>
               </label>
               <input
                 type="number"
@@ -146,27 +161,28 @@ export function PoolsView() {
                 max="100"
                 value={warnThreshold}
                 onChange={(e) => setWarnThreshold(e.target.value)}
-                className="w-full rounded-lg border border-vector-border bg-vector-dark px-3 py-2 text-sm text-white focus:border-vector-primary focus:outline-none"
+                className="w-full rounded-lg border border-vector-border bg-vector-dark px-4 py-3 font-mono text-lg text-white focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-transparent transition-all"
               />
+              <p className="mt-3 text-xs text-slate-500">Scores ≥ this value emit a warning event.</p>
             </div>
           </div>
 
-          <div className="flex gap-4">
+          <div className="flex gap-4 pt-2">
             <button
               onClick={handleProtect}
               disabled={isPending || isConfirming || !poolId || !!poolIdError}
-              className="inline-flex items-center gap-2 rounded-lg bg-vector-primary px-5 py-2.5 font-semibold text-white transition hover:bg-vector-primary/90 disabled:opacity-50"
+              className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-vector-primary px-6 py-3 font-bold text-white transition hover:bg-vector-primary/90 disabled:pointer-events-none disabled:opacity-50"
             >
               <Plus className="h-4 w-4" />
-              {isPending ? "Signing..." : isConfirming ? "Confirming..." : "Protect Pool"}
+              {isPending ? "Signing in Wallet..." : isConfirming ? "Confirming tx..." : "Protect Pool"}
             </button>
             <button
               onClick={handleRemove}
               disabled={isPending || isConfirming || !poolId || !!poolIdError}
-              className="inline-flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-5 py-2.5 font-semibold text-red-400 transition hover:bg-red-500/20 disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-red-500/20 bg-red-500/5 px-6 py-3 font-bold text-red-400 transition hover:bg-red-500/10 disabled:pointer-events-none disabled:opacity-50"
             >
               <Trash2 className="h-4 w-4" />
-              Remove Protection
+              Remove
             </button>
           </div>
 
