@@ -27,6 +27,7 @@ const DEMO_POOL_ID = "0x00000000000000000000000000000000000000000000000000000000
 const DEMO_SENDER  = "0x0000000000000000000000000000000000000001";
 const WETH         = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
 
+// Demo inputs verified to yield ALLOW, WARN, BLOCK from the risk pipeline (see scripts/test-risk-scenarios.js).
 const QUICK_FILLS = [
   {
     label: "ALLOW",
@@ -43,20 +44,20 @@ const QUICK_FILLS = [
   },
   {
     label: "WARN",
-    subtitle: "Unknown EOA token",
+    subtitle: "EOA token on Unichain (on-chain layer)",
     color: "border-amber-500/40 text-amber-400 hover:bg-amber-500/10",
     values: {
       poolId: DEMO_POOL_ID,
-      tokenIn: "0x742d35Cc6634C0532925a3b8D4C82B5e97c50B8d",
-      tokenOut: WETH,
+      tokenIn: WETH,
+      tokenOut: "0x1234567890123456789012345678901234567890",
       amountIn: "1000000000000000000",
       sender: DEMO_SENDER,
-      chainId: SUPPORTED_CHAINS.BASE_SEPOLIA,
+      chainId: SUPPORTED_CHAINS.UNICHAIN_SEPOLIA,
     },
   },
   {
     label: "BLOCK",
-    subtitle: "Known malicious token",
+    subtitle: "Known malicious token (threat intel)",
     color: "border-red-500/40 text-red-400 hover:bg-red-500/10",
     values: {
       poolId: DEMO_POOL_ID,
