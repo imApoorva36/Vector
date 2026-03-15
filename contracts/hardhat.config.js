@@ -1,5 +1,6 @@
 require("dotenv").config();
 require("@nomicfoundation/hardhat-toolbox");
+require("solidity-coverage");
 
 const alchemyKey = process.env.ALCHEMY_API_KEY;
 const baseSepoliaUrl = alchemyKey

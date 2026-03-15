@@ -66,4 +66,29 @@ describe("VectorReactiveCallback", function () {
       callback.connect(rsc).reactiveCallback(rsc.address, payload)
     ).to.be.revertedWithCustomError(callback, "UnauthorizedRSC");
   });
+
+  it("getLatestAlert returns empty struct for poolId with no alert", async function () {
+    const unknownPoolId = ethers.zeroPadValue("0x99", 32);
+    const alert = await callback.getLatestAlert(unknownPoolId);
+    expect(alert.sourceChainId).to.equal(0);
+    expect(alert.poolId).to.equal(ethers.ZeroHash);
+    expect(alert.actor).to.equal(ethers.ZeroAddress);
+    expect(alert.riskScore).to.equal(0);
+    expect(alert.timestamp).to.equal(0);
+    expect(alert.reason).to.equal("");
+  });
+
+  it("getAlertCount increments for each callback", async function () {
+    await callback.authorizeRSC(rsc.address);
+    const poolId2 = ethers.zeroPadValue("0x02", 32);
+    const payload2 = ethers.AbiCoder.defaultAbiCoder().encode(
+      ["uint256", "bytes32", "address", "uint256", "string"],
+      [84532, poolId2, user.address, 90, "Second alert"]
+    );
+    await callback.connect(rsc).reactiveCallback(rsc.address, payload2);
+    expect(await callback.getAlertCount()).to.be.gte(2);
+    const alert2 = await callback.getLatestAlert(poolId2);
+    expect(alert2.riskScore).to.equal(90);
+    expect(alert2.reason).to.equal("Second alert");
+  });
 });

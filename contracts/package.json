@@ -5,6 +5,7 @@
   "scripts": {
     "compile": "npx hardhat compile",
     "test": "npx hardhat test",
+    "coverage": "npx hardhat coverage",
     "copy-abis": "node scripts/copy-abis.js",
     "update-subgraph": "node scripts/update-subgraph-addresses.js",
     "integration-test": "npx hardhat run scripts/integration-test.js --network localhost",
@@ -15,7 +16,8 @@
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
-    "hardhat": "^2.22.0"
+    "hardhat": "^2.22.0",
+    "solidity-coverage": "^0.8.17"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^5.0.2",
