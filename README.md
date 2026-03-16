@@ -1,6 +1,6 @@
 # Vector
 
-*Pool protection that can't be bypassed, enforced in the hook.*
+_Pool protection that can't be bypassed, enforced in the hook._
 
 Most pool protection lives off-chain or in the UI. You rely on routing filters or wallet warnings. But once a swap hits the PoolManager, nothing on-chain stops it. Vector moves the check into the Uniswap v4 hook. Protected pools get attestation-gated execution; the revert is in Solidity.
 
@@ -13,28 +13,72 @@ Most pool protection lives off-chain or in the UI. You rely on routing filters o
 <table align="center">
   <tr>
     <td align="center">
+      <img width="240" alt="Landing page" src="images/landing.png" />
+      <br>
+      <sub><i>Landing page</i></sub>
+      <br>
+      <sub>Hero, stats, how it works</sub>
+    </td>
+    <td align="center">
       <img width="240" alt="Pool onboarding" src="images/pools.png" />
       <br>
       <sub><i>Pool onboarding</i></sub>
+      <br>
+      <sub>Set protection, register pool, thresholds</sub>
     </td>
     <td align="center">
       <img width="240" alt="Swap risk simulator" src="images/simulate.png" />
       <br>
       <sub><i>Swap risk simulator</i></sub>
+      <br>
+      <sub>Simulate risk, attestation, ALLOW / WARN / BLOCK</sub>
     </td>
     <td align="center">
       <img width="240" alt="Operator dashboard" src="images/dashboard.png" />
       <br>
       <sub><i>Operator dashboard</i></sub>
+      <br>
+      <sub>Stats, evaluations, signer status, cross-chain alerts</sub>
     </td>
   </tr>
 </table>
 
 ---
 
+## Architecture Diagram
+
+<p align="center">
+  <em>System components and trust boundaries.</em>
+</p>
+
+```mermaid
+flowchart TD
+  User["User / Aggregator"] --> Frontend["Next.js\nPools · Simulate · Dashboard"]
+  Frontend --> RiskAPI["Risk API\nPOST /api/risk-score"]
+  RiskAPI --> RPC["On-chain RPC\n(getCode, getTxCount, getBalance)"]
+  RiskAPI --> Layers["5-layer pipeline\nAllowlist → Intent → Threat → On-chain → Bytecode"]
+  Layers --> Signer["TEE / Attestation Signer\nEIP-191"]
+  RiskAPI --> Frontend
+
+  Frontend --> Subgraph["The Graph Subgraph\nSwapEvaluated, SwapBlocked, CrossChainAlert"]
+  Subgraph --> Dashboard["Dashboard stats"]
+
+  Frontend --> PM["Uniswap v4 PoolManager\nswap(..., hookData)"]
+  PM --> Hook["VectorHook\nbeforeSwap / afterSwap"]
+  Hook --> Registry["VectorRiskRegistry\nverifyAttestation, getPoolProtection"]
+  Hook --> Policy["PolicyEngine\nevaluate, pause"]
+  Registry --> Policy
+
+  Hook -->|SwapBlocked events| RSC["VectorReactiveRSC\n(Reactive Network)"]
+  RSC -->|Callback| Callback["VectorReactiveCallback\n(dest chain)"]
+  Callback --> Subgraph
+```
+
+---
+
 ## Demo
 
-> **Demo video:** `TBD` (replace with final recording link before submission)
+**Demo video:** [Coming soon — will be added before submission]
 
 ---
 
@@ -81,24 +125,24 @@ Every swap (beforeSwap) →
 
 **Policy quick reference:**
 
-| Pool type   | Has attestation | Score &lt; warn | Warn ≤ score &lt; block | Score ≥ block   |
-|------------|------------------|----------------|--------------------------|-----------------|
-| **Protected** | Yes              | ALLOW          | WARN (emit)               | BLOCK (revert)  |
-| **Protected** | No               | BLOCK          | BLOCK                     | BLOCK           |
-| **Unprotected** | Yes            | ALLOW          | WARN (emit)               | WARN (emit)     |
-| **Unprotected** | No             | ALLOW          | ALLOW                     | ALLOW           |
+| Pool type       | Has attestation | Score &lt; warn | Warn ≤ score &lt; block | Score ≥ block  |
+| --------------- | --------------- | --------------- | ----------------------- | -------------- |
+| **Protected**   | Yes             | ALLOW           | WARN (emit)             | BLOCK (revert) |
+| **Protected**   | No              | BLOCK           | BLOCK                   | BLOCK          |
+| **Unprotected** | Yes             | ALLOW           | WARN (emit)             | WARN (emit)    |
+| **Unprotected** | No              | ALLOW           | ALLOW                   | ALLOW          |
 
 Default thresholds: `warnThreshold = 31`, `blockThreshold = 70`. Attestation TTL is 5 minutes (risk engine).
 
 **Risk scoring (0–100) is 5 layers:**
 
-| Layer | Name | What it does |
-|-------|------|----------------|
-| 1 | **Allowlist** | Trusted tokens/pools → score 0, fast path |
-| 2 | **Swap intent** | Large swaps, micro swaps → anomaly signals |
-| 3 | **Threat intel** | GoPlus API + known malicious tokens |
-| 4 | **On-chain signals** | EOA vs contract, tx history, balance |
-| 5 | **Bytecode** | SELFDESTRUCT, DELEGATECALL, proxy patterns |
+| Layer | Name                 | What it does                               |
+| ----- | -------------------- | ------------------------------------------ |
+| 1     | **Allowlist**        | Trusted tokens/pools → score 0, fast path  |
+| 2     | **Swap intent**      | Large swaps, micro swaps → anomaly signals |
+| 3     | **Threat intel**     | GoPlus API + known malicious tokens        |
+| 4     | **On-chain signals** | EOA vs contract, tx history, balance       |
+| 5     | **Bytecode**         | SELFDESTRUCT, DELEGATECALL, proxy patterns |
 
 Scores aggregate; the TEE (or dev signer) signs once per assessment; the hook enforces on every swap.
 
@@ -155,64 +199,37 @@ sequenceDiagram
 
 ---
 
-## Architecture Diagram
-
-System components and trust boundaries.
-
-```mermaid
-flowchart TD
-  User["User / Aggregator"] --> Frontend["Next.js\nPools · Simulate · Dashboard"]
-  Frontend --> RiskAPI["Risk API\nPOST /api/risk-score"]
-  RiskAPI --> RPC["On-chain RPC\n(getCode, getTxCount, getBalance)"]
-  RiskAPI --> Layers["5-layer pipeline\nAllowlist → Intent → Threat → On-chain → Bytecode"]
-  Layers --> Signer["TEE / Attestation Signer\nEIP-191"]
-  RiskAPI --> Frontend
-
-  Frontend --> Subgraph["The Graph Subgraph\nSwapEvaluated, SwapBlocked, CrossChainAlert"]
-  Subgraph --> Dashboard["Dashboard stats"]
-
-  Frontend --> PM["Uniswap v4 PoolManager\nswap(..., hookData)"]
-  PM --> Hook["VectorHook\nbeforeSwap / afterSwap"]
-  Hook --> Registry["VectorRiskRegistry\nverifyAttestation, getPoolProtection"]
-  Hook --> Policy["PolicyEngine\nevaluate, pause"]
-  Registry --> Policy
-
-  Hook -->|SwapBlocked events| RSC["VectorReactiveRSC\n(Reactive Network)"]
-  RSC -->|Callback| Callback["VectorReactiveCallback\n(dest chain)"]
-  Callback --> Subgraph
-```
-
----
-
 ## Sponsor Bounty Integrations
 
-| Sponsor | What we built |
-|--------|----------------|
-| **Reactive Network** | **VectorReactiveRSC** (on Reactive) subscribes to `SwapBlockedByPolicy` from the hook. Counts blocks per (actor, poolId); after 3 blocks, triggers a cross-chain **Callback** with encoded alert payload. **VectorReactiveCallback** (on Base Sepolia / Unichain Sepolia) receives the callback, stores the risk alert, and emits `CrossChainRiskAlert` for the subgraph. Multi-chain threat propagation without bridges. |
-| **Unichain** | Full Vector stack deployed on **Unichain Sepolia** (chainId 1301) alongside Base Sepolia. Frontend chain selector (Base Sepolia / Unichain Sepolia), shared chain profiles and threshold presets in `@vector/shared`. Same hook, registry, policy, and risk API; attestation payload includes `chainId` so one engine can serve both chains. |
+| Sponsor              | Bounty / Track | What we built                                                                                                                                                                                                                                                                                                                                                                                                             |
+| -------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Reactive Network** | Reactive RSC   | **VectorReactiveRSC** (on Reactive) subscribes to `SwapBlockedByPolicy` from the hook. Counts blocks per (actor, poolId); after 3 blocks, triggers a cross-chain **Callback** with encoded alert payload. **VectorReactiveCallback** (on Base Sepolia / Unichain Sepolia) receives the callback, stores the risk alert, and emits `CrossChainRiskAlert` for the subgraph. Multi-chain threat propagation without bridges. |
+| **Unichain**         | Unichain       | Full Vector stack deployed on **Unichain Sepolia** (chainId 1301) alongside Base Sepolia. Frontend chain selector (Base Sepolia / Unichain Sepolia), shared chain profiles and threshold presets in `@vector/shared`. Same hook, registry, policy, and risk API; attestation payload includes `chainId` so one engine can serve both chains.                                                                              |
 
 ---
 
 ## Deployed Contracts
 
+Addresses are synced from `contracts/deployments/*.json` after each deploy.
+
 **Base Sepolia** (chainId 84532)
 
-| Contract | Address |
-|----------|---------|
-| VectorGovernance | [`0xE3EB4D642d92f04E2797bAA91adFE13345D27Dd2`](https://sepolia.basescan.org/address/0xE3EB4D642d92f04E2797bAA91adFE13345D27Dd2) |
-| VectorRiskRegistry | [`0x4cab8F4e0e1DF0dE30C112895C094F1C590d16e3`](https://sepolia.basescan.org/address/0x4cab8F4e0e1DF0dE30C112895C094F1C590d16e3) |
-| PolicyEngine | [`0x2e68EDfae75BAC2eB2f7b53B2E8FA0d2afc3ae5b`](https://sepolia.basescan.org/address/0x2e68EDfae75BAC2eB2f7b53B2E8FA0d2afc3ae5b) |
-| VectorHook | [`0xb0ffEE5a824E151e6f2Fd0E9D36C1F7a9a983844`](https://sepolia.basescan.org/address/0xb0ffEE5a824E151e6f2Fd0E9D36C1F7a9a983844) |
+| Contract               | Address                                                                                                                         |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| VectorGovernance       | [`0xE3EB4D642d92f04E2797bAA91adFE13345D27Dd2`](https://sepolia.basescan.org/address/0xE3EB4D642d92f04E2797bAA91adFE13345D27Dd2) |
+| VectorRiskRegistry     | [`0x4cab8F4e0e1DF0dE30C112895C094F1C590d16e3`](https://sepolia.basescan.org/address/0x4cab8F4e0e1DF0dE30C112895C094F1C590d16e3) |
+| PolicyEngine           | [`0x2e68EDfae75BAC2eB2f7b53B2E8FA0d2afc3ae5b`](https://sepolia.basescan.org/address/0x2e68EDfae75BAC2eB2f7b53B2E8FA0d2afc3ae5b) |
+| VectorHook             | [`0xb0ffEE5a824E151e6f2Fd0E9D36C1F7a9a983844`](https://sepolia.basescan.org/address/0xb0ffEE5a824E151e6f2Fd0E9D36C1F7a9a983844) |
 | VectorReactiveCallback | [`0x56D4d13a5289dA908Bd84B759c21756A7A89Cd53`](https://sepolia.basescan.org/address/0x56D4d13a5289dA908Bd84B759c21756A7A89Cd53) |
 
 **Unichain Sepolia** (chainId 1301)
 
-| Contract | Address |
-|----------|---------|
-| VectorGovernance | `0x40703409E02E2fdb9425609868A0896Dc22A14F2` |
-| VectorRiskRegistry | `0x9b61454a7e07191AD3F5f0dbA337EA3c5b4cB943` |
-| PolicyEngine | `0x81f8270304F96596D3723071B86765fF8fF0a2A7` |
-| VectorHook | `0xa2986B6F4Aff5fDE3A6ab056E249969c6aa8509b` |
+| Contract               | Address                                      |
+| ---------------------- | -------------------------------------------- |
+| VectorGovernance       | `0x40703409E02E2fdb9425609868A0896Dc22A14F2` |
+| VectorRiskRegistry     | `0x9b61454a7e07191AD3F5f0dbA337EA3c5b4cB943` |
+| PolicyEngine           | `0x81f8270304F96596D3723071B86765fF8fF0a2A7` |
+| VectorHook             | `0xa2986B6F4Aff5fDE3A6ab056E249969c6aa8509b` |
 | VectorReactiveCallback | `0x195092d0611E2E23721e3B8227A82561780ED274` |
 
 ---
@@ -239,6 +256,13 @@ Reactive's “subscribe on one chain, act on another” fit Vector well. SwapBlo
 
 ---
 
+## Architecture notes
+
+- **Subgraph:** The Graph subgraph is configured for **Base Sepolia** and **Unichain Sepolia** (separate manifests). The dashboard reads SwapEvaluated, SwapBlocked, and CrossChainRiskAlert from the subgraph. Deploy with `npm run copy-abis && node scripts/update-subgraph-addresses.js <network>` after contract deploy.
+- **Risk engine (embedded in frontend):** The 5-layer risk pipeline and attestation signing run in the **Next.js API** (`frontend/app/api/risk-score/`). No separate server is required. Set `TEE_SIGNER_KEY` in `frontend/.env`; the same signer must be registered in VectorRiskRegistry for attestation verification.
+
+---
+
 ## Setup Instructions
 
 ### Prerequisites
@@ -250,24 +274,31 @@ Reactive's “subscribe on one chain, act on another” fit Vector well. SwapBlo
 ### Contracts
 
 1. Navigate to the contracts directory:
+
 ```bash
 cd contracts
 ```
 
 2. Install dependencies and copy env:
+
 ```bash
 npm install
 cp .env.example .env
 ```
+
 3. Add `DEPLOYER_PRIVATE_KEY` (and optional RPC URLs) to `.env`.
 
 4. Compile and test:
+
 ```bash
 npx hardhat compile
 npx hardhat test
 ```
 
+Optional: run coverage (`npm run coverage`) for a line/statement/function/branch report; see [Testing](#testing) below.
+
 5. Deploy (optional; use addresses in README for frontend):
+
 ```bash
 npx hardhat run scripts/deploy.js --network baseSepolia
 npx hardhat run scripts/deploy.js --network unichainSepolia
@@ -277,25 +308,29 @@ npm run copy-abis && node scripts/update-subgraph-addresses.js baseSepolia
 ### Frontend
 
 1. Navigate to the frontend:
+
 ```bash
 cd frontend
 ```
 
 2. Install and copy env:
+
 ```bash
 npm install
 cp .env.example .env
 ```
+
 3. Fill in `TEE_SIGNER_KEY` (attestation signer private key), `RPC_URL`, contract addresses, and `NEXT_PUBLIC_SUBGRAPH_URL`. The 5-layer risk pipeline runs inside Next.js API routes - no separate server needed.
 
-  Layer 4 blacklist checks are read directly from `VectorRiskRegistry.isBlacklisted(token)` on-chain.
-  Use registry owner methods `setTokenBlacklist` / `batchSetTokenBlacklist` to update blocked tokens.
-
+Layer 4 blacklist checks are read directly from `VectorRiskRegistry.isBlacklisted(token)` on-chain.
+Use registry owner methods `setTokenBlacklist` / `batchSetTokenBlacklist` to update blocked tokens.
 
 4. Start the dev server:
+
 ```bash
 npm run dev
 ```
+
 App runs at [http://localhost:3000](http://localhost:3000). Use **Pools** (set protection), **Simulate** (risk + attestation), **Dashboard** (stats + evaluations).
 
 ### Subgraph (optional, after deploy)
@@ -308,19 +343,51 @@ App runs at [http://localhost:3000](http://localhost:3000). Use **Pools** (set p
 
 ## Testing
 
+### Contract tests
+
 ```bash
 cd contracts && npx hardhat test
 ```
 
-**Contract tests (15):** VectorRiskRegistry (pool config), PolicyEngine (ALLOW/WARN/BLOCK, pause), VectorHook (attestation verify, replay failure, expiry, unprotected WARN). Reactive: VectorReactiveCallback (unauthorized revert, authorized callback, revoke).
+**46 tests** across:
+
+- **VectorRiskRegistry:** pool protection config, default config for unknown pool, set/remove pool protection, setRiskThreshold, token blacklist (including batch with zero-address skip), TEE signer, verifyAttestation (valid, expired, invalid signature length/v, TEE not configured, default threshold when riskThreshold is 0).
+- **PolicyEngine:** evaluate ALLOW/WARN/BLOCK (protected/unprotected, with/without attestation, paused), setThresholds, pause/unpause.
+- **VectorHook:** evaluateSwap (no attestation revert, valid attestation ALLOW, replay revert, paused revert, expired revert, high-risk attestation revert, unprotected WARN, hookData score-only when TEE not configured), emitSwapExecuted.
+- **VectorHookV4:** onlyPoolManager modifier (revert when non-PoolManager calls beforeSwap/afterSwap), PoolManager beforeSwap (revert when hook blocks, success when hook allows), PoolManager afterSwap (emits SwapExecuted), immutables.
+- **VectorReactiveCallback:** unauthorized revert, authorize/revoke RSC, callback and CrossChainRiskAlert, getAlertCount, getLatestAlert (including empty struct for unknown poolId).
+- **VectorGovernance:** initial owner, Ownable2Step transferOwnership + acceptOwnership.
+
+### Coverage
+
+```bash
+cd contracts && npm run coverage
+```
+
+- **Statements / Lines / Functions:** 100%
+- **Branches:** 85%+ (solidity-coverage; report in `coverage/` and `coverage.json`)
+
+### E2E (Playwright)
 
 ```bash
 cd frontend && npm run test:e2e
 ```
 
-**E2E (Playwright, 5):** Landing, simulate (risk assessment), dashboard, pools.
+**5 E2E tests:** Landing, simulate (risk assessment), dashboard, pools.
 
-**Integration (risk API → hook):** With frontend running (`TEE_SIGNER_KEY` set in `frontend/.env`):
+### Risk pipeline scenarios (Simulate quick-fills)
+
+To confirm the risk API returns ALLOW, WARN, and BLOCK for the demo scenarios:
+
+```bash
+cd frontend && node scripts/test-risk-scenarios.js
+```
+
+Uses the same engine as the app (no separate server); requires `RPC_URL` (or default Base Sepolia) in `frontend/.env` for on-chain/bytecode layers.
+
+### Integration (risk API → hook)
+
+With frontend running (`TEE_SIGNER_KEY` set in `frontend/.env`):
 
 ```bash
 # Terminal 1: start frontend with TEE_SIGNER_KEY
@@ -330,7 +397,8 @@ cd frontend && npm run dev
 cd contracts && npx hardhat run scripts/integration-test.js --network hardhat
 ```
 
-**Risk engine standalone tests (optional):**
+### Risk engine standalone tests
+
 ```bash
 cd risk-engine && npm run test
 ```
@@ -351,6 +419,6 @@ cd risk-engine && npm run test
 
 MIT. See [LICENSE](LICENSE) for details.
 
-------------------------
+---
 
-Built with ❤️ by Apoorva Agrawal · [GitHub](https://github.com/imApoorva36) · [X](https://x.com/im__apoorva)
+Built with ❤️ by Apoorva Agrawal · [GitHub](https://github.com/imApoorva36) · [X / Twitter](https://x.com/im__apoorva) · [Discord](https://discord.com/users/imapoorva)
