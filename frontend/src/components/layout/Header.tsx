@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { Shield, ChevronDown } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { CHAIN_IDS, CHAIN_METADATA } from "@/lib/constants";
 import { useWallet } from "@/context/WalletContext";
@@ -39,7 +40,7 @@ export function Header() {
     <header className="sticky top-0 z-50 border-b border-vector-border bg-vector-dark/80 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
         <Link href="/" className="flex items-center gap-2">
-          <Shield className="h-7 w-7 text-vector-primary" />
+          <Image src="/icon.png" alt="Vector" width={28} height={28} className="h-7 w-7 object-contain" />
           <span className="text-xl font-bold tracking-tight">Vector</span>
         </Link>
 

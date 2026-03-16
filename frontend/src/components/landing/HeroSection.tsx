@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Shield, Zap, Eye } from "lucide-react";
+import Image from "next/image";
+import { Zap, Eye } from "lucide-react";
 
 export function HeroSection() {
   return (
@@ -13,7 +14,7 @@ export function HeroSection() {
 
       <div className="relative mx-auto max-w-4xl px-4 text-center">
         <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-vector-border bg-vector-card px-4 py-1.5 text-xs font-medium text-slate-300">
-          <Shield className="h-4 w-4 text-vector-primary" />
+          <Image src="/icon.png" alt="" width={18} height={18} className="h-4 w-4 object-contain" />
           Uniswap v4 Hook Protection
         </div>
 

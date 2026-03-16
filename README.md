@@ -1,5 +1,9 @@
 # Vector
 
+<p align="center">
+  <img src="frontend/public/icon.png" alt="Vector" width="120" />
+</p>
+
 _Pool protection that can't be bypassed, enforced in the hook._
 
 Most pool protection lives off-chain or in the UI. You rely on routing filters or wallet warnings. But once a swap hits the PoolManager, nothing on-chain stops it. Vector moves the check into the Uniswap v4 hook. Protected pools get attestation-gated execution; the revert is in Solidity.
@@ -13,34 +17,26 @@ Most pool protection lives off-chain or in the UI. You rely on routing filters o
 <table align="center">
   <tr>
     <td align="center">
-      <img width="240" alt="Landing page" src="images/landing.png" />
+      <img width="360" alt="Landing" src="images/landing.png" />
       <br>
-      <sub><i>Landing page</i></sub>
-      <br>
-      <sub>Hero, stats, how it works</sub>
+      <sub><i>Landing page · hero & how it works</i></sub>
     </td>
     <td align="center">
-      <img width="240" alt="Pool onboarding" src="images/pools.png" />
+      <img width="360" alt="Pool onboarding" src="images/pools.png" />
       <br>
-      <sub><i>Pool onboarding</i></sub>
-      <br>
-      <sub>Set protection, register pool, thresholds</sub>
+      <sub><i>Pool onboarding · set protection & thresholds</i></sub>
     </td>
   </tr>
   <tr>
     <td align="center">
-      <img width="240" alt="Swap risk simulator" src="images/simulate.png" />
+      <img width="360" alt="Risk simulator" src="images/simulate.png" />
       <br>
-      <sub><i>Swap risk simulator</i></sub>
-      <br>
-      <sub>Simulate risk, attestation, ALLOW / WARN / BLOCK</sub>
+      <sub><i>Risk simulator · ALLOW / WARN / BLOCK</i></sub>
     </td>
     <td align="center">
-      <img width="240" alt="Operator dashboard" src="images/dashboard.png" />
+      <img width="360" alt="Operator dashboard" src="images/dashboard.png" />
       <br>
-      <sub><i>Operator dashboard</i></sub>
-      <br>
-      <sub>Stats, evaluations, signer status, cross-chain alerts</sub>
+      <sub><i>Operator dashboard · stats & evaluations</i></sub>
     </td>
   </tr>
 </table>
@@ -50,31 +46,8 @@ Most pool protection lives off-chain or in the UI. You rely on routing filters o
 ## Architecture Diagram
 
 <p align="center">
-  <em>System components and trust boundaries.</em>
+  <img width="960" alt="Vector architecture diagram" src="images/arch.png" />
 </p>
-
-```mermaid
-flowchart TD
-  User["User / Aggregator"] --> Frontend["Next.js\nPools · Simulate · Dashboard"]
-  Frontend --> RiskAPI["Risk API\nPOST /api/risk-score"]
-  RiskAPI --> RPC["On-chain RPC\n(getCode, getTxCount, getBalance)"]
-  RiskAPI --> Layers["5-layer pipeline\nAllowlist → Intent → Threat → On-chain → Bytecode"]
-  Layers --> Signer["TEE / Attestation Signer\nEIP-191"]
-  RiskAPI --> Frontend
-
-  Frontend --> Subgraph["The Graph Subgraph\nSwapEvaluated, SwapBlocked, CrossChainAlert"]
-  Subgraph --> Dashboard["Dashboard stats"]
-
-  Frontend --> PM["Uniswap v4 PoolManager\nswap(..., hookData)"]
-  PM --> Hook["VectorHook\nbeforeSwap / afterSwap"]
-  Hook --> Registry["VectorRiskRegistry\nverifyAttestation, getPoolProtection"]
-  Hook --> Policy["PolicyEngine\nevaluate, pause"]
-  Registry --> Policy
-
-  Hook -->|SwapBlocked events| RSC["VectorReactiveRSC\n(Reactive Network)"]
-  RSC -->|Callback| Callback["VectorReactiveCallback\n(dest chain)"]
-  Callback --> Subgraph
-```
 
 ---
 
