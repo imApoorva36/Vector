@@ -26,6 +26,8 @@ Most pool protection lives off-chain or in the UI. You rely on routing filters o
       <br>
       <sub>Set protection, register pool, thresholds</sub>
     </td>
+  </tr>
+  <tr>
     <td align="center">
       <img width="240" alt="Swap risk simulator" src="images/simulate.png" />
       <br>
@@ -160,45 +162,6 @@ The **Trusted Execution Environment** runs the risk pipeline and signs attestati
 
 ---
 
-## Swap Flow Diagram
-
-How a swap moves from user intent to risk API to attestation to hook enforcement.
-
-```mermaid
-sequenceDiagram
-  participant User
-  participant UI as Next.js Frontend
-  participant Risk as Risk API (TEE)
-  participant Chain as RPC
-  participant Hook as VectorHook
-  participant Registry as VectorRiskRegistry
-  participant Policy as PolicyEngine
-  participant PM as PoolManager
-
-  User->>UI: Enter pool, tokens, amount → Simulate
-  UI->>Risk: POST /api/risk-score
-  Risk->>Chain: getCode, balance, tx count (layers 4–5)
-  Risk->>Risk: 5-layer pipeline → score + attestation
-  Risk-->>UI: decision, riskScore, attestation (signature, expiry)
-
-  User->>UI: Submit swap (hookData = riskScore, expiry, signature)
-  UI->>PM: swap(..., hookData)
-  PM->>Hook: beforeSwap(...)
-  Hook->>Registry: verifyAttestation(poolId, zeroForOne, amount, attestation)
-  Registry-->>Hook: valid
-  Hook->>Policy: evaluate(poolId, sender, riskScore, hasAttestation)
-  Policy-->>Hook: ALLOW | WARN | BLOCK
-  alt BLOCK
-    Hook-->>PM: revert
-  else ALLOW or WARN
-    Hook-->>PM: return selector
-    PM->>PM: execute swap
-    PM->>Hook: afterSwap(...)
-  end
-```
-
----
-
 ## Sponsor Bounty Integrations
 
 | Sponsor              | Bounty / Track | What we built                                                                                                                                                                                                                                                                                                                                                                                                             |
@@ -216,21 +179,21 @@ Addresses are synced from `contracts/deployments/*.json` after each deploy.
 
 | Contract               | Address                                                                                                                         |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| VectorGovernance       | [`0xE3EB4D642d92f04E2797bAA91adFE13345D27Dd2`](https://sepolia.basescan.org/address/0xE3EB4D642d92f04E2797bAA91adFE13345D27Dd2) |
-| VectorRiskRegistry     | [`0x4cab8F4e0e1DF0dE30C112895C094F1C590d16e3`](https://sepolia.basescan.org/address/0x4cab8F4e0e1DF0dE30C112895C094F1C590d16e3) |
-| PolicyEngine           | [`0x2e68EDfae75BAC2eB2f7b53B2E8FA0d2afc3ae5b`](https://sepolia.basescan.org/address/0x2e68EDfae75BAC2eB2f7b53B2E8FA0d2afc3ae5b) |
-| VectorHook             | [`0xb0ffEE5a824E151e6f2Fd0E9D36C1F7a9a983844`](https://sepolia.basescan.org/address/0xb0ffEE5a824E151e6f2Fd0E9D36C1F7a9a983844) |
-| VectorReactiveCallback | [`0x56D4d13a5289dA908Bd84B759c21756A7A89Cd53`](https://sepolia.basescan.org/address/0x56D4d13a5289dA908Bd84B759c21756A7A89Cd53) |
+| VectorGovernance       | [`0x73a75069F8AB6cEFcF6B507Bee8a74FBc0CbAa2F`](https://sepolia.basescan.org/address/0x73a75069F8AB6cEFcF6B507Bee8a74FBc0CbAa2F) |
+| VectorRiskRegistry     | [`0x1E754605713ee61Bce2977FE1f86a686b275fD6e`](https://sepolia.basescan.org/address/0x1E754605713ee61Bce2977FE1f86a686b275fD6e) |
+| PolicyEngine           | [`0x408e2f6abC0d64a1036959bb6be95554BA855da4`](https://sepolia.basescan.org/address/0x408e2f6abC0d64a1036959bb6be95554BA855da4) |
+| VectorHook             | [`0x87277cCc902b42Be9b73dC228C6CA4F7F96A0B95`](https://sepolia.basescan.org/address/0x87277cCc902b42Be9b73dC228C6CA4F7F96A0B95) |
+| VectorReactiveCallback | [`0x22A29B673Bd1fF3c7E74CD1F3a68a1572be5D26D`](https://sepolia.basescan.org/address/0x22A29B673Bd1fF3c7E74CD1F3a68a1572be5D26D) |
 
 **Unichain Sepolia** (chainId 1301)
 
 | Contract               | Address                                      |
 | ---------------------- | -------------------------------------------- |
-| VectorGovernance       | `0x40703409E02E2fdb9425609868A0896Dc22A14F2` |
-| VectorRiskRegistry     | `0x9b61454a7e07191AD3F5f0dbA337EA3c5b4cB943` |
-| PolicyEngine           | `0x81f8270304F96596D3723071B86765fF8fF0a2A7` |
-| VectorHook             | `0xa2986B6F4Aff5fDE3A6ab056E249969c6aa8509b` |
-| VectorReactiveCallback | `0x195092d0611E2E23721e3B8227A82561780ED274` |
+| VectorGovernance       | `0x5a7eBfF6a201C55a5800eB04f0956ADD1FB711bd` |
+| VectorRiskRegistry     | `0x45fBE3e0B46c3E64d52A93649350314A33112430` |
+| PolicyEngine           | `0x38612802c15dFcBb880c61c85404CF89C3e13Ae3` |
+| VectorHook             | `0xbC03dD238c58AF8f9a423c03c8f42EE8ABC63B98` |
+| VectorReactiveCallback | `0x04040391C0a74918155e1A142E65aF709D0bc72B` |
 
 ---
 
