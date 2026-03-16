@@ -130,7 +130,10 @@ export function SimulateView() {
   const [result, setResult] = useState<RiskResult | null>(null);
   const [error, setError] = useState("");
 
-  const HOOK_ADDRESS = getContracts(walletChainId ?? chainId).VECTOR_HOOK;
+  const effectiveChainId = walletChainId ?? chainId;
+  const HOOK_ADDRESS = getContracts(effectiveChainId).VECTOR_HOOK;
+  const effectiveChainLabel = CHAIN_OPTIONS.find((c) => c.id === effectiveChainId)?.label ?? `Chain ${effectiveChainId}`;
+  const isSubmittingOnBaseSepolia = effectiveChainId === SUPPORTED_CHAINS.BASE_SEPOLIA;
 
   const {
     writeContract: writeEval,
@@ -142,7 +145,7 @@ export function SimulateView() {
   const { isLoading: evalConfirming, isSuccess: evalSuccess } =
     useWaitForTransactionReceipt({ hash: evalTxHash });
 
-  const explorerUrl = evalTxHash ? getTxExplorerUrl(evalTxHash, walletChainId ?? chainId) : null;
+  const explorerUrl = evalTxHash ? getTxExplorerUrl(evalTxHash, effectiveChainId) : null;
 
   function handleEvaluateOnChain() {
     if (!result?.attestation?.encodedAttestation || !HOOK_ADDRESS) return;
@@ -392,6 +395,22 @@ export function SimulateView() {
                   <code className="text-slate-400">HookSwapEvaluated</code> event that populates the Dashboard.
                   {!isConnected && <span className="ml-1 text-amber-400"> (connect wallet first)</span>}
                 </p>
+                {isConnected && (
+                  <>
+                    <p className="mb-1 text-xs">
+                      <span className="text-slate-500">Will submit on: </span>
+                      <span className="font-medium text-slate-300">{effectiveChainLabel}</span>
+                      {!isSubmittingOnBaseSepolia && (
+                        <span className="ml-1 text-amber-400">
+                          — Dashboard counts are for Base Sepolia. Switch your wallet to Base Sepolia to see this evaluation there.
+                        </span>
+                      )}
+                    </p>
+                    <p className="mb-2 text-xs text-slate-500 font-mono">
+                      Hook: {HOOK_ADDRESS ?? "—"}
+                    </p>
+                  </>
+                )}
                 <button
                   onClick={handleEvaluateOnChain}
                   disabled={evalPending || evalConfirming || !isConnected || !HOOK_ADDRESS}

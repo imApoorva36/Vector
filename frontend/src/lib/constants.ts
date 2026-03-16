@@ -1,32 +1,75 @@
+import { getAddress } from "viem";
+
+// Normalize env address to EIP-55 checksum so viem/wagmi accept it (avoids "Address must match checksum" errors).
+function toChecksumAddress(addr: string | undefined): `0x${string}` | undefined {
+  if (!addr || typeof addr !== "string") return undefined;
+  try {
+    return getAddress(addr) as `0x${string}`;
+  } catch {
+    return undefined;
+  }
+}
+
+// Next.js only inlines env vars that are statically referenced. Dynamic keys like
+// process.env[`NEXT_PUBLIC_HOOK_ADDRESS_${id}`] are not inlined, so per-chain vars
+// would be undefined in the client. Reference them explicitly so they are bundled.
+const HOOK_84532 = process.env.NEXT_PUBLIC_HOOK_ADDRESS_84532;
+const HOOK_1301 = process.env.NEXT_PUBLIC_HOOK_ADDRESS_1301;
+const REGISTRY_84532 = process.env.NEXT_PUBLIC_REGISTRY_ADDRESS_84532;
+const REGISTRY_1301 = process.env.NEXT_PUBLIC_REGISTRY_ADDRESS_1301;
+const POLICY_84532 = process.env.NEXT_PUBLIC_POLICY_ADDRESS_84532;
+const POLICY_1301 = process.env.NEXT_PUBLIC_POLICY_ADDRESS_1301;
+const GOVERNANCE_84532 = process.env.NEXT_PUBLIC_GOVERNANCE_ADDRESS_84532;
+const GOVERNANCE_1301 = process.env.NEXT_PUBLIC_GOVERNANCE_ADDRESS_1301;
+
 // Contract addresses; populate after deployment. Per-chain: NEXT_PUBLIC_*_<chainId> (e.g. _84532, _1301).
 export const CONTRACTS = {
-  VECTOR_HOOK: process.env.NEXT_PUBLIC_HOOK_ADDRESS as `0x${string}` | undefined,
-  RISK_REGISTRY: process.env.NEXT_PUBLIC_REGISTRY_ADDRESS as `0x${string}` | undefined,
-  POLICY_ENGINE: process.env.NEXT_PUBLIC_POLICY_ADDRESS as `0x${string}` | undefined,
-  GOVERNANCE: process.env.NEXT_PUBLIC_GOVERNANCE_ADDRESS as `0x${string}` | undefined,
+  get VECTOR_HOOK() {
+    return toChecksumAddress(process.env.NEXT_PUBLIC_HOOK_ADDRESS);
+  },
+  get RISK_REGISTRY() {
+    return toChecksumAddress(process.env.NEXT_PUBLIC_REGISTRY_ADDRESS);
+  },
+  get POLICY_ENGINE() {
+    return toChecksumAddress(process.env.NEXT_PUBLIC_POLICY_ADDRESS);
+  },
+  get GOVERNANCE() {
+    return toChecksumAddress(process.env.NEXT_PUBLIC_GOVERNANCE_ADDRESS);
+  },
 };
 
-const chainIdSuffix = (id: number) => `_${id}` as const;
-
-export function getContracts(chainId: number): typeof CONTRACTS {
-  const s = chainIdSuffix(chainId);
+export function getContracts(chainId: number): {
+  VECTOR_HOOK: `0x${string}` | undefined;
+  RISK_REGISTRY: `0x${string}` | undefined;
+  POLICY_ENGINE: `0x${string}` | undefined;
+  GOVERNANCE: `0x${string}` | undefined;
+} {
+  const hook =
+    chainId === 84532 ? HOOK_84532 : chainId === 1301 ? HOOK_1301 : process.env.NEXT_PUBLIC_HOOK_ADDRESS;
+  const registry =
+    chainId === 84532 ? REGISTRY_84532 : chainId === 1301 ? REGISTRY_1301 : process.env.NEXT_PUBLIC_REGISTRY_ADDRESS;
+  const policy =
+    chainId === 84532 ? POLICY_84532 : chainId === 1301 ? POLICY_1301 : process.env.NEXT_PUBLIC_POLICY_ADDRESS;
+  const governance =
+    chainId === 84532 ? GOVERNANCE_84532 : chainId === 1301 ? GOVERNANCE_1301 : process.env.NEXT_PUBLIC_GOVERNANCE_ADDRESS;
   return {
-    VECTOR_HOOK: (process.env[`NEXT_PUBLIC_HOOK_ADDRESS${s}`] ?? process.env.NEXT_PUBLIC_HOOK_ADDRESS) as `0x${string}` | undefined,
-    RISK_REGISTRY: (process.env[`NEXT_PUBLIC_REGISTRY_ADDRESS${s}`] ?? process.env.NEXT_PUBLIC_REGISTRY_ADDRESS) as `0x${string}` | undefined,
-    POLICY_ENGINE: (process.env[`NEXT_PUBLIC_POLICY_ADDRESS${s}`] ?? process.env.NEXT_PUBLIC_POLICY_ADDRESS) as `0x${string}` | undefined,
-    GOVERNANCE: (process.env[`NEXT_PUBLIC_GOVERNANCE_ADDRESS${s}`] ?? process.env.NEXT_PUBLIC_GOVERNANCE_ADDRESS) as `0x${string}` | undefined,
+    VECTOR_HOOK: toChecksumAddress(hook),
+    RISK_REGISTRY: toChecksumAddress(registry),
+    POLICY_ENGINE: toChecksumAddress(policy),
+    GOVERNANCE: toChecksumAddress(governance),
   };
 }
+
+// Static refs so Next inlines these env vars (see comment above).
+const SUBGRAPH_84532 = process.env.NEXT_PUBLIC_SUBGRAPH_URL_84532;
+const SUBGRAPH_1301 = process.env.NEXT_PUBLIC_SUBGRAPH_URL_1301;
 
 export const SUBGRAPH_URL =
   process.env.NEXT_PUBLIC_SUBGRAPH_URL || "";
 
 /** Subgraph query URL for the given chain. Use for dashboard/stats per chain. */
 export function getSubgraphUrl(chainId: number): string {
-  const s = chainId === 1301 ? "_1301" : chainId === 84532 ? "_84532" : "";
-  const url = s
-    ? process.env[`NEXT_PUBLIC_SUBGRAPH_URL${s}`]
-    : undefined;
+  const url = chainId === 84532 ? SUBGRAPH_84532 : chainId === 1301 ? SUBGRAPH_1301 : undefined;
   return url ?? process.env.NEXT_PUBLIC_SUBGRAPH_URL ?? "";
 }
 

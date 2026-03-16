@@ -28,12 +28,14 @@ async function main() {
   const govAddress = await gov.getAddress();
   console.log("VectorGovernance:", govAddress);
 
-  const registry = await VectorRiskRegistry.deploy(govAddress);
+  // Use the deployer EOA as the owner for admin-only actions (pool protection, thresholds, signer config).
+  // Governance is deployed for future consolidation, but it does not currently forward calls.
+  const registry = await VectorRiskRegistry.deploy(deployer.address);
   await registry.waitForDeployment();
   const registryAddress = await registry.getAddress();
   console.log("VectorRiskRegistry:", registryAddress);
 
-  const policy = await PolicyEngine.deploy(govAddress);
+  const policy = await PolicyEngine.deploy(deployer.address);
   await policy.waitForDeployment();
   const policyAddress = await policy.getAddress();
   console.log("PolicyEngine:", policyAddress);

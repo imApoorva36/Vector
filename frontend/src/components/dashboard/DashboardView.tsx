@@ -11,56 +11,98 @@ import {
   Key,
   Zap,
 } from "lucide-react";
-import { CHAIN_IDS, getSubgraphUrl } from "@/lib/constants";
+import { CHAIN_IDS, getSubgraphUrl, getChainName } from "@/lib/constants";
 import { useWallet } from "@/context/WalletContext";
 
-async function fetchDashboardData(subgraphUrl: string) {
+const DEFAULT_STATS = {
+  totalPools: 0,
+  totalSwapEvaluations: 0,
+  totalBlockedSwaps: 0,
+  totalWarnedSwaps: 0,
+  totalCrossChainAlerts: 0,
+};
+
+async function fetchDashboardData(subgraphUrl: string): Promise<{
+  protocolStats: typeof DEFAULT_STATS | null;
+  swapEvaluations: unknown[];
+  crossChainAlerts: unknown[];
+  poolsByBlocked: unknown[];
+  error?: string;
+} | null> {
   if (!subgraphUrl) return null;
   try {
-  const res = await fetch(subgraphUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      query: `{
-        protocolStats(id: "global") {
-          totalPools
-          totalSwapEvaluations
-          totalBlockedSwaps
-          totalWarnedSwaps
-          totalCrossChainAlerts
-        }
-        swapEvaluations(first: 20, orderBy: timestamp, orderDirection: desc) {
-          id
-          decision
-          riskScore
-          reason
-          sender
-          timestamp
-          pool { id protectionMode }
-        }
-        crossChainAlerts(first: 10, orderBy: timestamp, orderDirection: desc) {
-          id
-          sourceChainId
-          actor
-          riskScore
-          reason
-          timestamp
-          pool { id }
-        }
-        poolsByBlocked: pools(first: 5, orderBy: blockedSwaps, orderDirection: desc) {
-          id
-          blockedSwaps
-          warnedSwaps
-          allowedSwaps
-        }
-      }`,
-    }),
-  });
-  const json = await res.json();
-  return json.data ?? null;
-  } catch {
-    return null;
+    const res = await fetch(subgraphUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query: `{
+          protocolStats(id: "global") {
+            totalPools
+            totalSwapEvaluations
+            totalBlockedSwaps
+            totalWarnedSwaps
+            totalCrossChainAlerts
+          }
+          swapEvaluations(first: 20, orderBy: timestamp, orderDirection: desc) {
+            id
+            decision
+            riskScore
+            reason
+            sender
+            timestamp
+            pool { id protectionMode }
+          }
+          crossChainAlerts(first: 10, orderBy: timestamp, orderDirection: desc) {
+            id
+            sourceChainId
+            actor
+            riskScore
+            reason
+            timestamp
+            pool { id }
+          }
+          poolsByBlocked: pools(first: 5, orderBy: blockedSwaps, orderDirection: desc) {
+            id
+            blockedSwaps
+            warnedSwaps
+            allowedSwaps
+          }
+        }`,
+      }),
+    });
+    const json = await res.json();
+    if (json.errors?.length) {
+      return {
+        protocolStats: DEFAULT_STATS,
+        swapEvaluations: [],
+        crossChainAlerts: [],
+        poolsByBlocked: [],
+        error: json.errors.map((e: { message?: string }) => e.message).join("; "),
+      };
+    }
+    const data = json.data ?? {};
+    return {
+      protocolStats: data.protocolStats ?? DEFAULT_STATS,
+      swapEvaluations: data.swapEvaluations ?? [],
+      crossChainAlerts: data.crossChainAlerts ?? [],
+      poolsByBlocked: data.poolsByBlocked ?? [],
+    };
+  } catch (e) {
+    return {
+      protocolStats: DEFAULT_STATS,
+      swapEvaluations: [],
+      crossChainAlerts: [],
+      poolsByBlocked: [],
+      error: e instanceof Error ? e.message : "Failed to fetch subgraph",
+    };
   }
+}
+
+function toNum(v: unknown): number {
+  if (v === undefined || v === null) return 0;
+  if (typeof v === "number" && !Number.isNaN(v)) return v;
+  if (typeof v === "string") return parseInt(v, 10) || 0;
+  return 0;
 }
 
 async function fetchRiskEngineHealth() {
@@ -92,6 +134,7 @@ export function DashboardView() {
   const { chainId } = useWallet();
   const effectiveChainId = chainId ?? CHAIN_IDS.BASE_SEPOLIA;
   const subgraphUrl = getSubgraphUrl(effectiveChainId);
+  const chainLabel = getChainName(effectiveChainId) ?? `Chain ${effectiveChainId}`;
 
   const { data, isLoading } = useQuery({
     queryKey: ["dashboard", subgraphUrl],
@@ -106,10 +149,11 @@ export function DashboardView() {
     refetchInterval: 15_000,
   });
 
-  const stats = data?.protocolStats;
-  const evals = data?.swapEvaluations || [];
-  const alerts = data?.crossChainAlerts || [];
-  const poolsByBlocked = data?.poolsByBlocked || [];
+  const stats = data?.protocolStats ?? DEFAULT_STATS;
+  const evals = data?.swapEvaluations ?? [];
+  const alerts = data?.crossChainAlerts ?? [];
+  const poolsByBlocked = data?.poolsByBlocked ?? [];
+  const subgraphError = data?.error;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12">
@@ -117,6 +161,15 @@ export function DashboardView() {
         <div>
           <h1 className="mb-2 text-4xl font-extrabold tracking-tight text-white">Operator Dashboard</h1>
           <p className="text-lg text-slate-400">Live protocol statistics and recent evaluations.</p>
+          {subgraphUrl && (
+            <>
+              <p className="mt-1 text-xs text-slate-500">Data for: {chainLabel} (switch network in header to change)</p>
+              <p className="mt-0.5 text-xs text-slate-600">Only evaluations sent on this network appear here. In Simulate, use Base Sepolia in your wallet before &quot;Evaluate On-chain&quot; to see counts here.</p>
+            </>
+          )}
+          {subgraphError && (
+            <p className="mt-2 text-sm text-amber-400">Subgraph error: {subgraphError}</p>
+          )}
         </div>
       </div>
 
@@ -156,7 +209,7 @@ export function DashboardView() {
               {subgraphUrl ? "Subgraph connected" : "Subgraph not configured"}
             </p>
             <p className="text-xs text-slate-500">
-              Cross-chain alerts: {stats?.totalCrossChainAlerts ?? "-"}
+              Cross-chain alerts: {toNum(stats?.totalCrossChainAlerts)}
             </p>
           </div>
         </div>
@@ -165,11 +218,11 @@ export function DashboardView() {
       {/* Stats cards */}
       <div className="mb-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         {[
-          { icon: <Activity className="h-5 w-5 text-cyan-400" />, label: "Evaluations", value: stats?.totalSwapEvaluations || "-" },
-          { icon: <ShieldCheck className="h-5 w-5 text-emerald-400" />, label: "Protected Pools", value: stats?.totalPools || "-" },
-          { icon: <ShieldX className="h-5 w-5 text-rose-400" />, label: "Blocked", value: stats?.totalBlockedSwaps || "-" },
-          { icon: <ShieldAlert className="h-5 w-5 text-amber-400" />, label: "Warned", value: stats?.totalWarnedSwaps || "-" },
-          { icon: <TrendingUp className="h-5 w-5 text-violet-400" />, label: "X-Chain Alerts", value: stats?.totalCrossChainAlerts || "-" },
+          { icon: <Activity className="h-5 w-5 text-cyan-400" />, label: "Evaluations", value: toNum(stats?.totalSwapEvaluations) },
+          { icon: <ShieldCheck className="h-5 w-5 text-emerald-400" />, label: "Protected Pools", value: toNum(stats?.totalPools) },
+          { icon: <ShieldX className="h-5 w-5 text-rose-400" />, label: "Blocked", value: toNum(stats?.totalBlockedSwaps) },
+          { icon: <ShieldAlert className="h-5 w-5 text-amber-400" />, label: "Warned", value: toNum(stats?.totalWarnedSwaps) },
+          { icon: <TrendingUp className="h-5 w-5 text-violet-400" />, label: "X-Chain Alerts", value: toNum(stats?.totalCrossChainAlerts) },
         ].map((s, i) => (
           <div key={i} className="rounded-xl border border-vector-border bg-vector-card p-5 transition hover:border-vector-border/80">
             <div className="flex items-center gap-3">
@@ -198,7 +251,9 @@ export function DashboardView() {
               </div>
             ) : evals.length === 0 ? (
             <p className="text-sm text-slate-500">
-              No swap evaluations yet. Connect a subgraph to see live data.
+              {!subgraphUrl
+                ? "Subgraph not configured for this chain. Set NEXT_PUBLIC_SUBGRAPH_URL (and _84532 / _1301) in .env."
+                : "No evaluations indexed yet. Run Simulate → Evaluate On-chain (same chain as this dashboard). Wait ~1 min for the subgraph to sync. Ensure .env contract addresses match the subgraph deployment."}
             </p>
           ) : (
             <div className="space-y-3">

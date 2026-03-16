@@ -6,7 +6,7 @@ dataSources:
     name: VectorHook
     network: base-sepolia
     source:
-      address: "0xb0ffEE5a824E151e6f2Fd0E9D36C1F7a9a983844"
+      address: "0x7DF49EbfE3c6971edCE79Ce0253DC34eA434D8Ce"
       abi: VectorHook
       startBlock: 38816000
     mapping:
@@ -32,7 +32,7 @@ dataSources:
     name: PolicyEngine
     network: base-sepolia
     source:
-      address: "0x2e68EDfae75BAC2eB2f7b53B2E8FA0d2afc3ae5b"
+      address: "0xe65635d0057B905d546F565676f1aB4837765FA4"
       abi: PolicyEngine
       startBlock: 38816000
     mapping:
@@ -58,7 +58,7 @@ dataSources:
     name: VectorRiskRegistry
     network: base-sepolia
     source:
-      address: "0x4cab8F4e0e1DF0dE30C112895C094F1C590d16e3"
+      address: "0x8EB5F4aa5a2EC8D18Ebb31Bc4181FE06e81d6524"
       abi: VectorRiskRegistry
       startBlock: 38816000
     mapping:
@@ -83,7 +83,7 @@ dataSources:
     name: VectorReactiveCallback
     network: base-sepolia
     source:
-      address: "0x56D4d13a5289dA908Bd84B759c21756A7A89Cd53"
+      address: "0x2b7141f16E07ab0D5fdA6EfC0197605215DDC626"
       abi: VectorReactiveCallback
       startBlock: 38816000
     mapping:
