@@ -53,7 +53,7 @@ Most pool protection lives off-chain or in the UI. You rely on routing filters o
 
 ## Demo
 
-**Demo video:** `https://youtu.be/70oRLIqGET8`
+**Demo video:** [https://youtu.be/70oRLIqGET8](https://youtu.be/70oRLIqGET8)
 
 ---
 
@@ -272,8 +272,16 @@ App runs at [http://localhost:3000](http://localhost:3000). Use **Pools** (set p
 ### Subgraph (optional, after deploy)
 
 1. From `contracts/`, run `npm run copy-abis && node scripts/update-subgraph-addresses.js baseSepolia` so the subgraph has deployed addresses.
-2. In `subgraph/`: `npm install`, then `npm run codegen && npm run build && npm run deploy`. See [docs/subgraph-studio.md](docs/subgraph-studio.md) for Studio auth and deploy.
-3. Set `NEXT_PUBLIC_SUBGRAPH_URL` in frontend `.env` to the Query URL from Studio.
+2. In `subgraph/`: `npm install`, then run `npm run codegen && npm run build`.
+3. Authenticate Graph CLI and deploy from `subgraph/`:
+
+```bash
+npx graph auth --studio <DEPLOY_KEY>
+npm run deploy
+```
+
+Use your Subgraph Studio deploy key and make sure `network` in the selected manifest (`subgraph.yaml` or `subgraph-unichain.yaml`) matches your target chain.
+4. Set `NEXT_PUBLIC_SUBGRAPH_URL` in frontend `.env` to the Query URL from Studio.
 
 ---
 
