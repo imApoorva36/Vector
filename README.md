@@ -53,7 +53,7 @@ Most pool protection lives off-chain or in the UI. You rely on routing filters o
 
 ## Demo
 
-**Demo video:** [Coming soon — will be added before submission]
+**Demo video:** `https://youtu.be/70oRLIqGET8`
 
 ---
 
@@ -194,7 +194,7 @@ Reactive's “subscribe on one chain, act on another” fit Vector well. SwapBlo
 
 ## Architecture notes
 
-- **Subgraph:** The Graph subgraph is configured for **Base Sepolia** and **Unichain Sepolia** (separate manifests). The dashboard reads SwapEvaluated, SwapBlocked, and CrossChainRiskAlert from the subgraph. Deploy with `npm run copy-abis && node scripts/update-subgraph-addresses.js <network>` after contract deploy.
+- **Subgraph:** The Graph subgraph has separate manifests for **Base Sepolia** (`subgraph/subgraph.yaml`) and **Unichain Sepolia** (`subgraph/subgraph-unichain.yaml`). The dashboard reads `HookSwapEvaluated`, `SwapBlockedByPolicy`, and `CrossChainRiskAlert` from the subgraph. **Both** subgraphs are deployed: set `NEXT_PUBLIC_SUBGRAPH_URL` (Base) and `NEXT_PUBLIC_SUBGRAPH_URL_1301` (Unichain) in `frontend/.env`. Deploy with `npm run copy-abis && node scripts/update-subgraph-addresses.js <network>` after contract deploy.
 - **Risk engine (embedded in frontend):** The 5-layer risk pipeline and attestation signing run in the **Next.js API** (`frontend/app/api/risk-score/`). No separate server is required. Set `TEE_SIGNER_KEY` in `frontend/.env`; the same signer must be registered in VectorRiskRegistry for attestation verification.
 
 ---
