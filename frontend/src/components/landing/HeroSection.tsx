@@ -28,8 +28,7 @@ export function HeroSection() {
         <p className="mx-auto mt-6 max-w-2xl text-lg text-slate-400">
           Vector uses off-chain risk attestations verified on-chain through
           Uniswap v4 hooks to block malicious swaps before they drain your
-          pool. Hybrid enforcement: fail-closed for protected pools,
-          fail-open for unprotected.
+          pool.
         </p>
 
         <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
